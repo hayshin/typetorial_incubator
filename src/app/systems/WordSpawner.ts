@@ -79,6 +79,7 @@ export class WordSpawner {
   private spawnWord(): void {
     // Only spawn if we have remaining messages for this level
     if (this.remainingMessages.length === 0) {
+      console.log("WordSpawner - no more messages to spawn");
       return;
     }
 
@@ -89,6 +90,13 @@ export class WordSpawner {
     const messageText = this.remainingMessages[randomIndex];
     this.remainingMessages.splice(randomIndex, 1);
 
+    console.log(
+      "WordSpawner - spawning word:",
+      messageText,
+      "remaining:",
+      this.remainingMessages.length,
+    );
+
     // Update progress
     this.updateLevelProgress();
 
@@ -98,6 +106,8 @@ export class WordSpawner {
     // Set spawn position on right edge
     word.x = GameConstants.WORD_SPAWN_X;
     word.y = this.getRandomSpawnY();
+
+    console.log("WordSpawner - word positioned at:", word.x, word.y);
 
     this.activeWords.push(word);
     this.container.addChild(word);
@@ -134,13 +144,35 @@ export class WordSpawner {
    * Clean up words that are completed or off-screen
    */
   private cleanupWords(): void {
+    const wordsToRemove: Word[] = [];
+
     this.activeWords = this.activeWords.filter((word) => {
       if (word.isCompleted || word.hasReachedEdge) {
+        console.log(
+          "WordSpawner - removing word:",
+          word.targetText,
+          "completed:",
+          word.isCompleted,
+          "reachedEdge:",
+          word.hasReachedEdge,
+          "position:",
+          word.x,
+        );
+        wordsToRemove.push(word);
         word.destroy();
         return false;
       }
       return true;
     });
+
+    if (wordsToRemove.length > 0) {
+      console.log(
+        "WordSpawner - cleaned up",
+        wordsToRemove.length,
+        "words, remaining:",
+        this.activeWords.length,
+      );
+    }
 
     // Check if level should advance after cleaning up words
     if (this.remainingMessages.length === 0 && this.activeWords.length === 0) {
@@ -299,9 +331,24 @@ export class WordSpawner {
     if (currentLevel === 1 || currentLevel === 2) {
       // Get all messages for current level
       const levelMessages = MessageDictionary.getMessagesByLevel(currentLevel);
-      // For testing: only use the first 2 messages from each level
-      this.remainingMessages = levelMessages.slice(0, 2).map((msg) => msg.text);
+
+      // Shuffle the messages for randomness
+      const shuffledMessages = [...levelMessages].sort(
+        () => Math.random() - 0.5,
+      );
+
+      // For testing: only use the first 2 messages from shuffled array
+      this.remainingMessages = shuffledMessages
+        .slice(0, 2)
+        .map((msg) => msg.text);
       this.totalMessages = this.remainingMessages.length;
+
+      console.log(
+        "WordSpawner - initialized level",
+        currentLevel,
+        "with messages:",
+        this.remainingMessages,
+      );
     } else {
       // Level 3 doesn't use messages from dictionary
       this.remainingMessages = [];

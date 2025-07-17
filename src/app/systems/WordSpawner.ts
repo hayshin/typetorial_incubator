@@ -1,7 +1,10 @@
 import type { Container } from "pixi.js";
 import { GameState } from "../core/GameState";
 import { GameConstants } from "../data/GameConstants";
-import { MessageDictionary } from "../data/MessageDictionary";
+import {
+  MessageDictionary,
+  type MessageEntry,
+} from "../data/MessageDictionary";
 import { Word } from "../entities/Word";
 
 /**
@@ -39,7 +42,7 @@ export class WordSpawner {
   public onLevelAdvance?: (nextLevel: 1 | 2 | 3) => void;
 
   /** Messages remaining in current level */
-  private remainingMessages: string[] = [];
+  private remainingMessages: MessageEntry[] = [];
 
   /** Total messages for current level */
   private totalMessages: number = 0;
@@ -87,12 +90,14 @@ export class WordSpawner {
     const randomIndex = Math.floor(
       Math.random() * this.remainingMessages.length,
     );
-    const messageText = this.remainingMessages[randomIndex];
+    const messageEntry = this.remainingMessages[randomIndex];
     this.remainingMessages.splice(randomIndex, 1);
 
     console.log(
       "WordSpawner - spawning word:",
-      messageText,
+      messageEntry.text,
+      "by:",
+      messageEntry.author,
       "remaining:",
       this.remainingMessages.length,
     );
@@ -101,16 +106,40 @@ export class WordSpawner {
     this.updateLevelProgress();
 
     const speed = this.getSpeedForDifficulty();
-    const word = new Word(messageText, speed);
+    const word = new Word(messageEntry.text, speed);
 
-    // Set spawn position on right edge
-    word.x = GameConstants.WORD_SPAWN_X;
-    word.y = this.getRandomSpawnY();
+    // Set spawn position based on level and author
+    const spawnPosition = this.getSpawnPosition(messageEntry);
+    word.x = spawnPosition.x;
+    word.y = spawnPosition.y;
 
     console.log("WordSpawner - word positioned at:", word.x, word.y);
-
     this.activeWords.push(word);
     this.container.addChild(word);
+  }
+
+  /**
+   * Get spawn position based on level and message author
+   */
+  private getSpawnPosition(messageEntry: MessageEntry): {
+    x: number;
+    y: number;
+  } {
+    const currentLevel = GameState.getCurrentLevel();
+
+    // Level 2: Messages from "асель" spawn from center
+    if (currentLevel === 2 && messageEntry.author === "асель") {
+      return {
+        x: 1000, // Center horizontally
+        y: 0, // Center vertically
+      };
+    }
+
+    // Default spawn from right edge
+    return {
+      x: GameConstants.WORD_SPAWN_X,
+      y: this.getRandomSpawnY(),
+    };
   }
 
   /**
@@ -164,15 +193,6 @@ export class WordSpawner {
       }
       return true;
     });
-
-    if (wordsToRemove.length > 0) {
-      console.log(
-        "WordSpawner - cleaned up",
-        wordsToRemove.length,
-        "words, remaining:",
-        this.activeWords.length,
-      );
-    }
 
     // Check if level should advance after cleaning up words
     if (this.remainingMessages.length === 0 && this.activeWords.length === 0) {
@@ -338,16 +358,14 @@ export class WordSpawner {
       );
 
       // For testing: only use the first 2 messages from shuffled array
-      this.remainingMessages = shuffledMessages
-        .slice(0, 2)
-        .map((msg) => msg.text);
+      this.remainingMessages = shuffledMessages.slice(0, 2);
       this.totalMessages = this.remainingMessages.length;
 
       console.log(
         "WordSpawner - initialized level",
         currentLevel,
         "with messages:",
-        this.remainingMessages,
+        this.remainingMessages.map((msg) => msg.text),
       );
     } else {
       // Level 3 doesn't use messages from dictionary

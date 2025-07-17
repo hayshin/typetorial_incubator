@@ -3,9 +3,8 @@ import { animate } from "motion";
 import type { AnimationPlaybackControls } from "motion/react";
 import type { Ticker } from "pixi.js";
 import { Container } from "pixi.js";
-
+import { GameState } from "../../core/GameState";
 import { InputManager } from "../../core/InputManager";
-
 import { Player } from "../../entities/Player";
 import type { Word } from "../../entities/Word";
 import { engine } from "../../getEngine";
@@ -13,6 +12,7 @@ import { PausePopup } from "../../popups/PausePopup";
 import { SettingsPopup } from "../../popups/SettingsPopup";
 import { WordSpawner } from "../../systems/WordSpawner";
 import { Label } from "../../ui/Label";
+import { GameOverScreen } from "../gameover/GameOverScreen";
 
 /** The screen that holds the app */
 export class MainScreen extends Container {
@@ -261,12 +261,12 @@ export class MainScreen extends Container {
   }
 
   /** Handle word reaching edge */
-  private handleWordReachedEdge(): void {
+  private async handleWordReachedEdge(): Promise<void> {
     this.lives--;
     this.updateLivesDisplay();
 
     if (this.lives <= 0) {
-      this.gameOver();
+      await this.gameOver();
     }
   }
 
@@ -290,12 +290,15 @@ export class MainScreen extends Container {
   }
 
   /** Game over */
-  private gameOver(): void {
+  private async gameOver(): Promise<void> {
     this.wordSpawner.stopSpawning();
     this.inputManager.setEnabled(false);
 
-    // TODO: Show game over screen
-    console.log("Game Over! Final Score:", this.score);
+    // Set final score in global state
+    GameState.setFinalScore(this.score);
+
+    // Show game over screen
+    await engine().navigation.showScreen(GameOverScreen);
   }
 
   /** Prepare the screen just before showing */
@@ -336,6 +339,8 @@ export class MainScreen extends Container {
     this.player.clearBullets();
     this.updateScoreDisplay();
     this.updateLivesDisplay();
+    this.inputManager.setEnabled(true);
+    GameState.reset();
   }
 
   /** Resize the screen, fired whenever window size changes */

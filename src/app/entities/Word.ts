@@ -14,8 +14,11 @@ export class Word extends Container {
   /** Current progress of typing (how many characters typed correctly) */
   public typedProgress: number = 0;
 
-  /** Text display object */
-  private textDisplay: Text;
+  /** Text display for typed characters (gray) */
+  private typedTextDisplay: Text;
+
+  /** Text display for remaining characters (white) */
+  private remainingTextDisplay: Text;
 
   /** Movement speed in pixels per second */
   private speed: number;
@@ -35,7 +38,20 @@ export class Word extends Container {
     this.targetText = text.toLowerCase();
     this.speed = speed || GameConstants.WORD_SPEED;
 
-    this.textDisplay = new Text({
+    // Create text display for typed characters (initially empty)
+    this.typedTextDisplay = new Text({
+      text: "",
+      style: {
+        fontFamily: "Arial",
+        fontSize: 32,
+        fill: 0x888888, // Gray color for typed text
+        fontWeight: "bold",
+      },
+    });
+    this.typedTextDisplay.anchor.set(0, 0.5);
+
+    // Create text display for remaining characters
+    this.remainingTextDisplay = new Text({
       text: this.targetText,
       style: {
         fontFamily: "Arial",
@@ -44,9 +60,13 @@ export class Word extends Container {
         fontWeight: "bold",
       },
     });
+    this.remainingTextDisplay.anchor.set(0, 0.5);
 
-    this.textDisplay.anchor.set(0.5);
-    this.addChild(this.textDisplay);
+    this.addChild(this.typedTextDisplay);
+    this.addChild(this.remainingTextDisplay);
+
+    // Position texts correctly
+    this.updateTextPositions();
 
     // Start from right side of screen
     this.x = GameConstants.WORD_SPAWN_X;
@@ -105,12 +125,10 @@ export class Word extends Container {
     this.isActive = active;
 
     if (active) {
-      // Highlight the word when it becomes active
-      this.textDisplay.style.fill = GameConstants.TYPING_HIGHLIGHT_COLOR;
+      // Slightly scale up when active, but don't change color
       animate(this.scale, { x: 1.1, y: 1.1 }, { duration: 0.1 });
     } else {
       // Return to normal state
-      this.textDisplay.style.fill = GameConstants.TYPING_DEFAULT_COLOR;
       animate(this.scale, { x: 1, y: 1 }, { duration: 0.1 });
     }
   }
@@ -151,13 +169,13 @@ export class Word extends Container {
    * Show error state when wrong character is typed
    */
   private showError(): void {
-    const originalColor = this.textDisplay.style.fill;
+    // Flash red on remaining text only
+    const originalColor = this.remainingTextDisplay.style.fill;
+    this.remainingTextDisplay.style.fill = GameConstants.TYPING_ERROR_COLOR;
 
-    // Flash red
-    this.textDisplay.style.fill = GameConstants.TYPING_ERROR_COLOR;
     animate(this.scale, { x: 0.9, y: 0.9 }, { duration: 0.1 }).then(() => {
       animate(this.scale, { x: 1, y: 1 }, { duration: 0.1 });
-      this.textDisplay.style.fill = originalColor;
+      this.remainingTextDisplay.style.fill = originalColor;
     });
   }
 
@@ -168,11 +186,31 @@ export class Word extends Container {
     const typedPart = this.targetText.slice(0, this.typedProgress);
     const remainingPart = this.targetText.slice(this.typedProgress);
 
-    // Create formatted text with different colors for typed/untyped parts
-    this.textDisplay.text = typedPart + remainingPart;
+    // Update text content
+    this.typedTextDisplay.text = typedPart;
+    this.remainingTextDisplay.text = remainingPart;
 
-    // Note: For better visual feedback, we could use RichText or multiple Text objects
-    // to show different colors for typed vs untyped characters
+    // Update positions
+    this.updateTextPositions();
+  }
+
+  /**
+   * Update positions of text displays to align properly
+   */
+  private updateTextPositions(): void {
+    // Calculate total width to center the word
+    const typedWidth = this.typedTextDisplay.width;
+    const remainingWidth = this.remainingTextDisplay.width;
+    const totalWidth = typedWidth + remainingWidth;
+
+    // Center the entire word
+    const startX = -totalWidth / 2;
+
+    // Position typed text
+    this.typedTextDisplay.x = startX;
+
+    // Position remaining text right after typed text
+    this.remainingTextDisplay.x = startX + typedWidth;
   }
 
   /**

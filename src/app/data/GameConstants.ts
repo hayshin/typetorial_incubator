@@ -20,7 +20,7 @@ export class GameConstants {
   public static readonly MONSTER_X = 800; // Monster position on right side
 
   // Typing settings
-  public static readonly TYPING_HIGHLIGHT_COLOR = 0x00ff00; // Green for correct letters
+  public static readonly TYPING_TYPED_COLOR = 0x888888; // Gray for typed letters
   public static readonly TYPING_ERROR_COLOR = 0xff0000; // Red for wrong letters
   public static readonly TYPING_DEFAULT_COLOR = 0xffffff; // White for untyped letters
 

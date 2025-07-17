@@ -5,7 +5,7 @@ import type { Ticker } from "pixi.js";
 import { Container } from "pixi.js";
 
 import { InputManager } from "../../core/InputManager";
-import { GameConstants } from "../../data/GameConstants";
+
 import { Player } from "../../entities/Player";
 import type { Word } from "../../entities/Word";
 import { engine } from "../../getEngine";
@@ -39,6 +39,7 @@ export class MainScreen extends Container {
   private score: number = 0;
   private lives: number = 3;
   private currentInput: string = "";
+  private wrongCharHighlight: boolean = false;
 
   constructor() {
     super();
@@ -102,6 +103,7 @@ export class MainScreen extends Container {
     this.inputManager = new InputManager();
     this.inputManager.onCharacterTyped = this.handleCharacterTyped.bind(this);
     this.inputManager.onBackspace = this.handleBackspace.bind(this);
+    this.inputManager.onEscape = this.handleEscape.bind(this);
 
     // Initialize word spawner
     this.wordSpawner = new WordSpawner(this.gameContainer);
@@ -147,73 +149,82 @@ export class MainScreen extends Container {
 
   /** Handle character typed */
   private handleCharacterTyped(char: string): void {
-    this.currentInput += char;
-    this.updateInputDisplay();
+    const lowerChar = char.toLowerCase();
+    const activeWord = this.wordSpawner.getActiveWord();
 
-    // Check if we should shoot bullet for this character
-    const shouldShoot = this.shouldShootBullet(char);
+    // If we have an active word, check if this character is correct
+    if (activeWord && !activeWord.isCompleted) {
+      const expectedChar = activeWord.getNextCharacter();
 
-    if (shouldShoot) {
-      // Shoot bullet towards active word BEFORE processing input
-      // so the last bullet is fired before word becomes inactive
-      this.shootBullet();
+      if (expectedChar === lowerChar) {
+        // Correct character - add to input and process
+        this.currentInput += lowerChar;
+        this.wrongCharHighlight = false;
+        this.updateInputDisplay();
+        this.shootBullet();
+        this.processActiveWordInput(activeWord, lowerChar);
+      } else {
+        // Wrong character - just highlight the expected character in red
+        this.wrongCharHighlight = true;
+        this.updateInputDisplay();
+        // Don't add to input, don't shoot bullet, just visual feedback
+      }
+    } else {
+      // No active word - try to find matching word
+      const potentialInput = this.currentInput + lowerChar;
+      const matchingWord = this.wordSpawner.findMatchingWord(potentialInput);
+
+      if (matchingWord) {
+        // Found matching word - add character and activate it
+        this.currentInput += lowerChar;
+        this.wrongCharHighlight = false;
+        this.updateInputDisplay();
+        this.wordSpawner.setActiveWord(matchingWord);
+        this.player.setTarget(matchingWord);
+        this.shootBullet();
+        this.processActiveWordInput(matchingWord, lowerChar);
+      }
+      // If no matching word found, ignore the character
     }
-
-    // Try to find matching word or continue typing active word
-    this.processInput();
   }
 
   /** Handle backspace */
   private handleBackspace(): void {
     if (this.currentInput.length > 0) {
       this.currentInput = this.currentInput.slice(0, -1);
+      this.wrongCharHighlight = false;
       this.updateInputDisplay();
-    }
-  }
 
-  /** Process current input */
-  private processInput(): void {
-    // If no active word, try to find matching word
-    let activeWord = this.wordSpawner.getActiveWord();
-
-    if (!activeWord) {
-      activeWord = this.wordSpawner.findMatchingWord(this.currentInput);
-      if (activeWord) {
-        this.wordSpawner.setActiveWord(activeWord);
-        // Set player target when activating a word
-        this.player.setTarget(activeWord);
-      }
-    }
-
-    // If we have active word, try typing on it
-    if (activeWord) {
-      const lastChar = this.currentInput[this.currentInput.length - 1];
-      const success = activeWord.typeCharacter(lastChar);
-
-      if (!success) {
-        // Wrong character, clear input
-        this.currentInput = "";
-        this.updateInputDisplay();
+      // If we cleared all input, deactivate current word
+      if (this.currentInput.length === 0) {
         this.wordSpawner.setActiveWord(null);
         this.player.setTarget(null);
       }
     }
   }
 
-  /** Check if we should shoot bullet for this character */
-  private shouldShootBullet(char: string): boolean {
-    const activeWord = this.wordSpawner.getActiveWord();
+  /** Handle escape key */
+  private handleEscape(): void {
+    this.clearInput();
+  }
 
-    if (!activeWord || activeWord.isCompleted) {
-      // Try to find a word that matches current input including this char
-      const newInput = this.currentInput;
-      const matchingWord = this.wordSpawner.findMatchingWord(newInput);
-      return matchingWord !== null;
+  /** Clear current input */
+  private clearInput(): void {
+    this.currentInput = "";
+    this.wrongCharHighlight = false;
+    this.updateInputDisplay();
+    this.wordSpawner.setActiveWord(null);
+    this.player.setTarget(null);
+  }
+
+  /** Process input for active word */
+  private processActiveWordInput(activeWord: Word, char: string): void {
+    const success = activeWord.typeCharacter(char);
+
+    if (success && activeWord.isCompleted) {
+      // Word completed
+      this.handleWordCompleted(activeWord);
     }
-
-    // If we have active word, check if this character is correct
-    const expectedChar = activeWord.getNextCharacter();
-    return expectedChar === char.toLowerCase();
   }
 
   /** Shoot bullet towards active word */
@@ -226,23 +237,31 @@ export class MainScreen extends Container {
         `MainContainer position: (${this.mainContainer.x}, ${this.mainContainer.y})`,
       );
       this.player.shootBullet();
-    } else {
-      // Try to find matching word for shooting
-      const matchingWord = this.wordSpawner.findMatchingWord(this.currentInput);
-      if (matchingWord && !matchingWord.isCompleted) {
-        this.player.setTarget(matchingWord);
-        this.player.shootBullet();
-      }
     }
   }
 
   /** Update input display */
   private updateInputDisplay(): void {
-    this.currentInputDisplay.text = `Input: ${this.currentInput}`;
+    let displayText = `Input: ${this.currentInput}`;
+
+    // Add visual feedback for wrong character
+    if (this.wrongCharHighlight) {
+      const activeWord = this.wordSpawner.getActiveWord();
+      if (activeWord) {
+        const expectedChar = activeWord.getNextCharacter();
+        displayText += ` (Expected: ${expectedChar})`;
+      }
+    }
+
+    this.currentInputDisplay.text = displayText;
+    // Change color based on wrong character highlight
+    this.currentInputDisplay.style.fill = this.wrongCharHighlight
+      ? 0xff0000
+      : 0x00ff00;
   }
 
   /** Handle word reaching edge */
-  private handleWordReachedEdge(_word: Word): void {
+  private handleWordReachedEdge(): void {
     this.lives--;
     this.updateLivesDisplay();
 
@@ -257,10 +276,7 @@ export class MainScreen extends Container {
     this.updateScoreDisplay();
 
     // Clear input and deactivate word
-    this.currentInput = "";
-    this.updateInputDisplay();
-    this.wordSpawner.setActiveWord(null);
-    this.player.setTarget(null);
+    this.clearInput();
   }
 
   /** Update score display */
@@ -314,13 +330,12 @@ export class MainScreen extends Container {
   public reset() {
     this.score = 0;
     this.lives = 3;
-    this.currentInput = "";
+    this.wrongCharHighlight = false;
+    this.clearInput();
     this.wordSpawner.clearAllWords();
     this.player.clearBullets();
-    this.player.setTarget(null);
     this.updateScoreDisplay();
     this.updateLivesDisplay();
-    this.updateInputDisplay();
   }
 
   /** Resize the screen, fired whenever window size changes */

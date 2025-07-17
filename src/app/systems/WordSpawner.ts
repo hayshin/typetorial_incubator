@@ -127,11 +127,11 @@ export class WordSpawner {
   } {
     const currentLevel = GameState.getCurrentLevel();
 
-    // Level 2: Messages from "асель" spawn from center
+    // Level 2: Messages from "асель" spawn from speaker position
     if (currentLevel === 2 && messageEntry.author === "асель") {
       return {
-        x: 1000, // Center horizontally
-        y: 0, // Center vertically
+        x: GameConstants.SPEAKER_X,
+        y: GameConstants.SPEAKER_Y,
       };
     }
 

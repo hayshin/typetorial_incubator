@@ -77,23 +77,20 @@ export class WordSpawner {
    * Spawn a new word
    */
   private spawnWord(): void {
-    let messageText: string;
-
-    // Get message based on current level and remaining messages
-    if (this.remainingMessages.length > 0) {
-      // Use message from remaining queue
-      const randomIndex = Math.floor(
-        Math.random() * this.remainingMessages.length,
-      );
-      messageText = this.remainingMessages[randomIndex];
-      this.remainingMessages.splice(randomIndex, 1);
-
-      // Update progress
-      this.updateLevelProgress();
-    } else {
-      // Fallback to random message
-      messageText = MessageDictionary.getRandomMessageText();
+    // Only spawn if we have remaining messages for this level
+    if (this.remainingMessages.length === 0) {
+      return;
     }
+
+    // Use message from remaining queue
+    const randomIndex = Math.floor(
+      Math.random() * this.remainingMessages.length,
+    );
+    const messageText = this.remainingMessages[randomIndex];
+    this.remainingMessages.splice(randomIndex, 1);
+
+    // Update progress
+    this.updateLevelProgress();
 
     const speed = this.getSpeedForDifficulty();
     const word = new Word(messageText, speed);
@@ -302,8 +299,8 @@ export class WordSpawner {
     if (currentLevel === 1 || currentLevel === 2) {
       // Get all messages for current level
       const levelMessages = MessageDictionary.getMessagesByLevel(currentLevel);
-      // this.remainingMessages = levelMessages.map((msg) => msg.text);
-      this.remainingMessages = levelMessages.slice(0, 1).map((msg) => msg.text);
+      // For testing: only use the first 2 messages from each level
+      this.remainingMessages = levelMessages.slice(0, 2).map((msg) => msg.text);
       this.totalMessages = this.remainingMessages.length;
     } else {
       // Level 3 doesn't use messages from dictionary

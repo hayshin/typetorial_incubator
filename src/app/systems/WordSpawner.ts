@@ -1,6 +1,7 @@
 import type { Container } from "pixi.js";
 import { GameState } from "../core/GameState";
 import { GameConstants } from "../data/GameConstants";
+import { Level3TextManager } from "../data/Level3TextManager";
 import {
   MessageDictionary,
   type MessageEntry,
@@ -140,6 +141,34 @@ export class WordSpawner {
       x: GameConstants.WORD_SPAWN_X,
       y: this.getRandomSpawnY(),
     };
+  }
+
+  /**
+   * Spawn a player message (level 3) - goes from left to right
+   */
+  public spawnPlayerMessage(text: string): Word {
+    const speed = this.getSpeedForDifficulty();
+    const word = new Word(text, speed);
+
+    // Set spawn position from player
+    word.x = GameConstants.PLAYER_MESSAGE_SPAWN_X;
+    word.y = GameConstants.PLAYER_MESSAGE_SPAWN_Y;
+
+    // Reverse direction for player messages (go right)
+    word.setDirection(1); // 1 = right, -1 = left
+
+    console.log(
+      "WordSpawner - spawning player message:",
+      text,
+      "at:",
+      word.x,
+      word.y,
+    );
+
+    this.activeWords.push(word);
+    this.container.addChild(word);
+
+    return word;
   }
 
   /**
@@ -367,8 +396,15 @@ export class WordSpawner {
         "with messages:",
         this.remainingMessages.map((msg) => msg.text),
       );
+    } else if (currentLevel === 3) {
+      // Level 3 uses boss battle texts
+      const bossText = Level3TextManager.getRandomText();
+      console.log("WordSpawner - Level 3 boss text:", bossText.text);
+      // For level 3, we don't use remainingMessages the same way
+      this.remainingMessages = [];
+      this.totalMessages = 1; // One boss text to complete
     } else {
-      // Level 3 doesn't use messages from dictionary
+      // Fallback
       this.remainingMessages = [];
       this.totalMessages = 0;
     }
@@ -432,6 +468,17 @@ export class WordSpawner {
    */
   public getTotalMessageCount(): number {
     return this.totalMessages;
+  }
+
+  /**
+   * Get current boss text for level 3
+   */
+  public getCurrentBossText(): string {
+    const currentLevel = GameState.getCurrentLevel();
+    if (currentLevel === 3) {
+      return Level3TextManager.getRandomText().text;
+    }
+    return "";
   }
 
   /**

@@ -32,6 +32,9 @@ export class Word extends Container {
   /** Whether this word has reached the left edge */
   public hasReachedEdge: boolean = false;
 
+  /** Direction multiplier for movement (1 = right, -1 = left) */
+  private directionMultiplier: number = -1;
+
   constructor(text: string, speed?: number) {
     super();
 
@@ -69,6 +72,17 @@ export class Word extends Container {
   }
 
   /**
+   * Set movement direction (1 = right, -1 = left)
+   */
+  public setDirection(direction: 1 | -1): void {
+    this.directionMultiplier = direction;
+    // Update velocity to match new direction
+    const angle = ((Math.random() - 0.5) * Math.PI) / 3;
+    this.velocityX = this.directionMultiplier * this.speed * Math.cos(angle);
+    this.velocityY = this.speed * Math.sin(angle);
+  }
+
+  /**
    * Update word position and check bounds
    */
   public update(deltaTime: number): void {
@@ -90,9 +104,17 @@ export class Word extends Container {
       this.velocityY = -this.velocityY; // Bounce back
     }
 
-    // Check if reached left edge
-    if (this.x < GameConstants.WORD_DESTROY_X) {
-      this.hasReachedEdge = true;
+    // Check if reached edge (depends on direction)
+    if (this.directionMultiplier < 0) {
+      // Moving left - check left edge
+      if (this.x < GameConstants.WORD_DESTROY_X) {
+        this.hasReachedEdge = true;
+      }
+    } else {
+      // Moving right - check right edge
+      if (this.x > GameConstants.WORD_SPAWN_X) {
+        this.hasReachedEdge = true;
+      }
     }
   }
 

@@ -113,4 +113,32 @@ export class GameConstants {
     TEXT_PRIMARY: 0xffffff,
     TEXT_SECONDARY: 0xaaaaaa,
   };
+
+  // Typography
+  public static readonly FONT_FAMILY =
+    "'San Francisco', Helvetica, Arial, sans-serif";
+
+  // Default text styles
+  public static readonly TEXT_STYLES = {
+    DEFAULT: {
+      fontFamily: GameConstants.FONT_FAMILY,
+      fontSize: 16,
+      fill: GameConstants.COLORS.TEXT_PRIMARY,
+    },
+    LARGE: {
+      fontFamily: GameConstants.FONT_FAMILY,
+      fontSize: 24,
+      fill: GameConstants.COLORS.TEXT_PRIMARY,
+    },
+    SMALL: {
+      fontFamily: GameConstants.FONT_FAMILY,
+      fontSize: 14,
+      fill: GameConstants.COLORS.TEXT_SECONDARY,
+    },
+    BUTTON: {
+      fontFamily: GameConstants.FONT_FAMILY,
+      fontSize: 18,
+      fill: GameConstants.COLORS.TEXT_PRIMARY,
+    },
+  };
 }

@@ -1,7 +1,10 @@
 import type { Container } from "pixi.js";
 import { GameState } from "../core/GameState";
 import { GameConstants } from "../data/GameConstants";
-import { MessageDictionary } from "../data/MessageDictionary";
+import {
+  MessageDictionary,
+  type MessageEntry,
+} from "../data/MessageDictionary";
 import { Word } from "../entities/Word";
 
 /**
@@ -39,7 +42,7 @@ export class WordSpawner {
   public onLevelAdvance?: (nextLevel: 1 | 2 | 3) => void;
 
   /** Messages remaining in current level */
-  private remainingMessages: string[] = [];
+  private remainingMessages: MessageEntry[] = [];
 
   /** Total messages for current level */
   private totalMessages: number = 0;
@@ -86,14 +89,14 @@ export class WordSpawner {
     const randomIndex = Math.floor(
       Math.random() * this.remainingMessages.length,
     );
-    const messageText = this.remainingMessages[randomIndex];
+    const messageEntry = this.remainingMessages[randomIndex];
     this.remainingMessages.splice(randomIndex, 1);
 
     // Update progress
     this.updateLevelProgress();
 
     const speed = this.getSpeedForDifficulty();
-    const word = new Word(messageText, speed);
+    const word = new Word(messageEntry.text, speed, messageEntry.author);
 
     // Set spawn position on right edge
     word.x = GameConstants.WORD_SPAWN_X;
@@ -264,7 +267,7 @@ export class WordSpawner {
   }
 
   /**
-   * Set custom spawn interval
+   * Set spawn interval
    */
   public setSpawnInterval(interval: number): void {
     this.spawnInterval = interval;
@@ -278,11 +281,14 @@ export class WordSpawner {
   }
 
   /**
-   * Force spawn a specific word (for testing)
+   * Spawn a specific word (for testing or special events)
    */
-  public spawnSpecificWord(text: string): Word {
+  public spawnSpecificWord(text: string, author?: string): Word {
     const speed = this.getSpeedForDifficulty();
-    const word = new Word(text, speed);
+    const word = new Word(text, speed, author || "Mentor");
+
+    word.x = GameConstants.WORD_SPAWN_X;
+    word.y = this.getRandomSpawnY();
 
     this.activeWords.push(word);
     this.container.addChild(word);
@@ -300,7 +306,8 @@ export class WordSpawner {
       // Get all messages for current level
       const levelMessages = MessageDictionary.getMessagesByLevel(currentLevel);
       // For testing: only use the first 2 messages from each level
-      this.remainingMessages = levelMessages.slice(0, 2).map((msg) => msg.text);
+      // this.remainingMessages = levelMessages.slice(0, 2);
+      this.remainingMessages = levelMessages;
       this.totalMessages = this.remainingMessages.length;
     } else {
       // Level 3 doesn't use messages from dictionary
@@ -313,14 +320,12 @@ export class WordSpawner {
   }
 
   /**
-   * Update level progress based on remaining messages
+   * Update level progress
    */
   private updateLevelProgress(): void {
-    if (this.totalMessages > 0) {
-      const completed = this.totalMessages - this.remainingMessages.length;
-      const progress = (completed / this.totalMessages) * 100;
-      GameState.setLevelProgress(progress);
-    }
+    const completed = this.totalMessages - this.remainingMessages.length;
+    const progress = (completed / this.totalMessages) * 100;
+    GameState.setLevelProgress(progress);
   }
 
   /**
@@ -328,26 +333,20 @@ export class WordSpawner {
    */
   private handleLevelComplete(): void {
     const currentLevel = GameState.getCurrentLevel();
+    const nextLevel = (currentLevel + 1) as 1 | 2 | 3;
 
-    if (currentLevel < 3) {
-      const nextLevel = (currentLevel + 1) as 1 | 2 | 3;
-
-      // Start level transition
-      GameState.startLevelTransition(nextLevel);
-
-      // Notify about level advance
-      if (this.onLevelAdvance) {
-        this.onLevelAdvance(nextLevel);
-      }
+    if (this.onLevelAdvance) {
+      this.onLevelAdvance(nextLevel);
     }
   }
 
   /**
-   * Reset for new level
+   * Reset spawner for new level
    */
   public resetForLevel(): void {
     this.clearAllWords();
     this.initializeLevel();
+    this.spawnTimer = 0;
   }
 
   /**
@@ -365,10 +364,9 @@ export class WordSpawner {
   }
 
   /**
-   * Cleanup - remove all words and stop spawning
+   * Destroy the spawner
    */
   public destroy(): void {
-    this.stopSpawning();
     this.clearAllWords();
   }
 }

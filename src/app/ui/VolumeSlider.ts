@@ -12,14 +12,14 @@ export class VolumeSlider extends Slider {
 
   constructor(label: string, min = -0.1, max = 100, value = 100) {
     const width = 280;
-    const height = 20;
-    const radius = 20;
-    const border = 4;
-    const handleRadius = 14;
-    const handleBorder = 4;
-    const meshColor = 0xec1561;
-    const fillColor = 0xef6294;
-    const borderColor = 0xec1561;
+    const height = 10;
+    const radius = 5;
+    const border = 1;
+    const handleRadius = 8;
+    const handleBorder = 1;
+    const meshColor = 0x111111;
+    const fillColor = 0x111111;
+    const borderColor = 0x111111;
     const backgroundColor = 0xffffff;
 
     const bg = new Graphics()
@@ -64,7 +64,7 @@ export class VolumeSlider extends Slider {
       text: label,
       style: {
         align: "left",
-        fill: 0x4a4a4a,
+        fill: 0x111111,
         fontSize: 18,
       },
     });

@@ -1,8 +1,9 @@
 import type { TextOptions, TextStyleOptions } from "pixi.js";
 import { Text } from "pixi.js";
+import { GameConstants } from "../data/GameConstants";
 
 const defaultLabelStyle: Partial<TextStyleOptions> = {
-  fontFamily: "Arial Rounded MT Bold",
+  fontFamily: GameConstants.FONT_FAMILY,
   align: "center",
 };
 

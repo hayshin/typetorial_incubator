@@ -23,6 +23,8 @@ export class GameOverScreen extends Container {
   private panelBase: RoundedBox;
   /** Game over title */
   private titleLabel: Label;
+  /** Caption under title */
+  private captionLabel: Label;
   /** Subtitle with instructions */
   private subtitleLabel: Label;
   /** Score display */
@@ -48,14 +50,12 @@ export class GameOverScreen extends Container {
       width: 500,
       height: 350,
       color: 0x1a1a1a,
-      borderColor: 0x444444,
-      borderWidth: 2,
     });
     this.panel.addChild(this.panelBase);
 
     // Create title label
     this.titleLabel = new Label({
-      text: "GAME OVER",
+      text: "KIIIICK",
       style: {
         fontSize: 48,
         fill: 0xff4444,
@@ -63,8 +63,20 @@ export class GameOverScreen extends Container {
       },
     });
     this.titleLabel.anchor.set(0.5);
-    this.titleLabel.y = -80;
+    this.titleLabel.y = -100;
     this.panel.addChild(this.titleLabel);
+
+    // Create caption label
+    this.captionLabel = new Label({
+      text: "minus 200k deposit and minus vibe",
+      style: {
+        fontSize: 16,
+        fill: 0x888888,
+      },
+    });
+    this.captionLabel.anchor.set(0.5);
+    this.captionLabel.y = -60;
+    this.panel.addChild(this.captionLabel);
 
     // Create score label
     this.scoreLabel = new Label({
@@ -75,7 +87,7 @@ export class GameOverScreen extends Container {
       },
     });
     this.scoreLabel.anchor.set(0.5);
-    this.scoreLabel.y = -20;
+    this.scoreLabel.y = -10;
     this.panel.addChild(this.scoreLabel);
 
     // Create subtitle label
@@ -87,7 +99,7 @@ export class GameOverScreen extends Container {
       },
     });
     this.subtitleLabel.anchor.set(0.5);
-    this.subtitleLabel.y = 40;
+    this.subtitleLabel.y = 120;
     this.panel.addChild(this.subtitleLabel);
 
     // Setup input manager for space key

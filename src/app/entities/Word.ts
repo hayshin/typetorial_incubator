@@ -1,6 +1,6 @@
-import { animate } from "motion";
-import { Container, HTMLText } from "pixi.js";
+import { Container } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
+import { MessageBubble } from "../ui/MessageBubble";
 
 /**
  * Represents a flying word that moves from right to left
@@ -13,8 +13,8 @@ export class Word extends Container {
   /** Current progress of typing (how many characters typed correctly) */
   public typedProgress: number = 0;
 
-  /** Single text display with HTML markup for different colors */
-  private textDisplay: HTMLText;
+  /** Message bubble display */
+  private messageBubble: MessageBubble;
 
   /** Movement speed in pixels per second */
   private speed: number;
@@ -32,7 +32,7 @@ export class Word extends Container {
   /** Whether this word has reached the left edge */
   public hasReachedEdge: boolean = false;
 
-  constructor(text: string, speed?: number) {
+  constructor(text: string, speed?: number, author?: string) {
     super();
 
     this.targetText = text.toLowerCase();
@@ -43,21 +43,22 @@ export class Word extends Container {
     this.velocityX = -this.speed * Math.cos(angle); // Negative for leftward movement
     this.velocityY = this.speed * Math.sin(angle);
 
-    // Create single text display with HTML markup support
-    this.textDisplay = new HTMLText({
-      text: this.targetText,
-      style: {
-        fontFamily: "Arial",
-        fontSize: GameConstants.MESSAGE_FONT_SIZE,
-        fill: GameConstants.TYPING_DEFAULT_COLOR,
-        fontWeight: "bold",
-        wordWrap: true,
-        wordWrapWidth: GameConstants.MESSAGE_MAX_WIDTH,
+    // Create message bubble with sender name and word as message
+    this.messageBubble = new MessageBubble(
+      author || "Mentor",
+      this.targetText,
+      {
+        maxWidth: GameConstants.MESSAGE_MAX_WIDTH,
+        messageSize: 20,
+        senderNameSize: 20,
       },
-    });
-    this.textDisplay.anchor.set(0.5, 0.5); // Center the text
+    );
+    
+    // Center the bubble by positioning it
+    this.messageBubble.x = -this.messageBubble.bubbleWidth * 0.5;
+    this.messageBubble.y = -this.messageBubble.bubbleHeight * 0.5;
 
-    this.addChild(this.textDisplay);
+    this.addChild(this.messageBubble);
 
     // Start from right side of screen
     this.x = GameConstants.WORD_SPAWN_X;
@@ -65,7 +66,9 @@ export class Word extends Container {
 
     // Fade in animation
     this.alpha = 0;
-    animate(this, { alpha: 1 }, { duration: GameConstants.FADE_IN_DURATION });
+    setTimeout(() => {
+      this.alpha = 1;
+    }, GameConstants.FADE_IN_DURATION * 1000);
   }
 
   /**
@@ -107,7 +110,7 @@ export class Word extends Container {
 
     if (typedChar === expectedChar) {
       this.typedProgress++;
-      this.updateTextDisplay();
+      this.updateMessageDisplay();
 
       // Check if word is completed
       if (this.typedProgress >= this.targetText.length) {
@@ -130,10 +133,10 @@ export class Word extends Container {
 
     if (active) {
       // Slightly scale up when active, but don't change color
-      animate(this.scale, { x: 1.1, y: 1.1 }, { duration: 0.1 });
+      this.scale.set(1.1, 1.1);
     } else {
       // Return to normal state
-      animate(this.scale, { x: 1, y: 1 }, { duration: 0.1 });
+      this.scale.set(1, 1);
     }
   }
 
@@ -159,48 +162,34 @@ export class Word extends Container {
     this.isActive = false;
 
     // Completion animation
-    animate(
-      this,
-      { alpha: 0, scale: { x: 1.5, y: 1.5 } },
-      {
-        duration: GameConstants.WORD_DESTROY_ANIMATION,
-        ease: "backOut",
-      },
-    );
+    this.scale.set(1.5, 1.5);
+    setTimeout(() => {
+      this.alpha = 0;
+    }, GameConstants.WORD_DESTROY_ANIMATION * 1000);
   }
 
   /**
    * Show error state when wrong character is typed
    */
   private showError(): void {
-    // Flash red on the entire text
-    const originalColor = this.textDisplay.style.fill;
-    this.textDisplay.style.fill = GameConstants.TYPING_ERROR_COLOR;
+    // Flash red by temporarily changing the message bubble colors
+    const originalBgColor = this.messageBubble.background.tint;
+    this.messageBubble.background.tint = 0xff0000;
 
-    animate(this.scale, { x: 0.9, y: 0.9 }, { duration: 0.1 }).then(() => {
-      animate(this.scale, { x: 1, y: 1 }, { duration: 0.1 });
-      this.textDisplay.style.fill = originalColor;
-      this.updateTextDisplay(); // Restore proper colors
-    });
+    this.scale.set(0.9, 0.9);
+    setTimeout(() => {
+      this.scale.set(1, 1);
+      this.messageBubble.background.tint = originalBgColor;
+    }, 100);
   }
 
   /**
-   * Update text display to show typing progress
+   * Update message display to show typing progress
    */
-  private updateTextDisplay(): void {
-    const typedPart = this.targetText.slice(0, this.typedProgress);
-    const remainingPart = this.targetText.slice(this.typedProgress);
-
-    // Create HTML markup with different colors
-    let htmlText = "";
-    if (typedPart) {
-      htmlText += `<span style="color: #888888">${typedPart}</span>`;
-    }
-    if (remainingPart) {
-      htmlText += `<span style="color: #ffffff">${remainingPart}</span>`;
-    }
-
-    this.textDisplay.text = htmlText || this.targetText;
+  private updateMessageDisplay(): void {
+    // For now, just show the full text without HTML markup
+    // The typing progress visual feedback can be handled differently if needed
+    this.messageBubble.setMessage(this.targetText);
   }
 
   /**
@@ -233,20 +222,14 @@ export class Word extends Container {
     this.typedProgress = 0;
     this.isCompleted = false;
     this.hasReachedEdge = false;
-    this.updateTextDisplay();
+    this.updateMessageDisplay();
   }
 
   /**
    * Destroy the word with animation
    */
   public async destroy(): Promise<void> {
-    await animate(
-      this,
-      { alpha: 0 },
-      {
-        duration: GameConstants.FADE_OUT_DURATION,
-      },
-    );
+    this.alpha = 0;
 
     if (this.parent) {
       this.parent.removeChild(this);

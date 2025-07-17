@@ -213,7 +213,8 @@ export class Bullet extends Container {
     // Scale up and fade out effect
     animate(this.scale, { x: 2, y: 2 }, { duration: 0.2, ease: "backOut" });
 
-    animate(this, { alpha: 0 }, { duration: 0.2 });
+    // Fade out effect
+    animate(this.alpha, 0, { duration: 0.2 });
 
     // Draw trail one last time for effect
     this.drawTrail();
@@ -269,7 +270,7 @@ export class Bullet extends Container {
 
     // Quick fade out if not already fading
     if (this.alpha > 0) {
-      animate(this, { alpha: 0 }, { duration: 0.1 }).then(() => {
+      animate(this.alpha, 0, { duration: 0.1 }).then(() => {
         super.destroy();
       });
     } else {

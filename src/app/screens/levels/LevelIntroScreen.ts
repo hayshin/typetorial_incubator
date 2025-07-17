@@ -52,8 +52,6 @@ export class LevelIntroScreen extends Container {
       width: 600,
       height: 400,
       color: 0x1a1a1a,
-      borderColor: 0x444444,
-      borderWidth: 2,
     });
     this.panel.addChild(this.panelBase);
 

@@ -1,10 +1,14 @@
 import { List } from "@pixi/ui";
 import { animate } from "motion";
-import type { Text } from "pixi.js";
-import { BlurFilter, Container, Sprite, Texture } from "pixi.js";
+import {
+  BlurFilter,
+  Container,
+  Sprite,
+  Text,
+  Texture,
+} from "pixi.js";
 
 import { engine } from "../getEngine";
-import { Button } from "../ui/Button";
 import { Label } from "../ui/Label";
 import { RoundedBox } from "../ui/RoundedBox";
 import { VolumeSlider } from "../ui/VolumeSlider";
@@ -19,7 +23,7 @@ export class SettingsPopup extends Container {
   /** The popup title label */
   private title: Text;
   /** Button that closes the popup */
-  private doneButton: Button;
+  private doneButton: Text;
   /** The panel background */
   private panelBase: RoundedBox;
   /** The build version label */
@@ -47,25 +51,40 @@ export class SettingsPopup extends Container {
     this.panelBase = new RoundedBox({ height: 425 });
     this.panel.addChild(this.panelBase);
 
-    this.title = new Label({
-      text: "Settings",
+    this.title = new Text({
+      text: "SETTINGS",
       style: {
-        fill: 0xec1561,
         fontSize: 50,
+        fill: 0x111111,
+        fontWeight: "bold",
+        align: "center",
       },
     });
+    this.title.anchor.set(0.5);
     this.title.y = -this.panelBase.boxHeight * 0.5 + 60;
     this.panel.addChild(this.title);
 
-    this.doneButton = new Button({ text: "OK" });
+    // Create text button (🆗 OK)
+    this.doneButton = new Text({
+      text: "🆗",
+      style: {
+        fontSize: 80,
+        fill: 0x111111,
+        fontWeight: "bold",
+        align: "center",
+      },
+    });
+    this.doneButton.anchor.set(0.5);
     this.doneButton.y = this.panelBase.boxHeight * 0.5 - 78;
-    this.doneButton.onPress.connect(() => engine().navigation.dismissPopup());
+    this.doneButton.eventMode = "static";
+    this.doneButton.cursor = "pointer";
+    this.doneButton.on("pointerup", () => engine().navigation.dismissPopup());
     this.panel.addChild(this.doneButton);
 
     this.versionLabel = new Label({
       text: `Version ${APP_VERSION}`,
       style: {
-        fill: 0xffffff,
+        fill: 0x111111,
         fontSize: 12,
       },
     });

@@ -1,5 +1,5 @@
 import { animate } from "motion";
-import { Container, Graphics } from "pixi.js";
+import { Container, Sprite, Texture } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
 import { Bullet } from "./Bullet";
 import type { Word } from "./Word";
@@ -9,7 +9,8 @@ import type { Word } from "./Word";
  */
 export class Player extends Container {
   /** Player's visual representation */
-  private playerGraphics!: Graphics;
+  private playerDefaultSprite!: Sprite;
+  private playerKeyboardSprite!: Sprite;
 
   /** Array of active bullets */
   private bullets: Bullet[] = [];
@@ -24,11 +25,8 @@ export class Player extends Container {
   private playerX: number;
   private playerY: number;
 
-  /** Player's color */
-  private playerColor: number = GameConstants.COLORS.PLAYER;
-
   /** Player size */
-  private playerSize: number = 30;
+  private playerSize: number = 400; // Increased for image sprites
 
   /** Animation state */
   private isAnimating: boolean = false;
@@ -56,26 +54,21 @@ export class Player extends Container {
    * Create player's visual representation
    */
   private createPlayerGraphics(): void {
-    this.playerGraphics = new Graphics();
+    // Create default state sprite
+    this.playerDefaultSprite = new Sprite(Texture.from("main/player/0.PNG"));
+    this.playerDefaultSprite.anchor.set(0.5);
+    this.playerDefaultSprite.width = this.playerSize;
+    this.playerDefaultSprite.height = this.playerSize;
 
-    // Draw player as a circle/character with border for visibility
-    this.playerGraphics.circle(0, 0, this.playerSize + 2).fill(0x000000); // Black border
-    this.playerGraphics.circle(0, 0, this.playerSize).fill(this.playerColor);
+    // Create keyboard state sprite
+    this.playerKeyboardSprite = new Sprite(Texture.from("main/player/1.PNG"));
+    this.playerKeyboardSprite.anchor.set(0.5);
+    this.playerKeyboardSprite.width = this.playerSize;
+    this.playerKeyboardSprite.height = this.playerSize;
+    this.playerKeyboardSprite.visible = false;
 
-    // Add a simple face
-    this.playerGraphics.circle(-8, -8, 3).fill(0xffffff); // Left eye
-    this.playerGraphics.circle(8, -8, 3).fill(0xffffff); // Right eye
-    this.playerGraphics.rect(-8, 5, 16, 3).fill(0xffffff); // Mouth
-
-    // Add a direction indicator (small arrow pointing right)
-    this.playerGraphics.moveTo(this.playerSize - 5, -5);
-    this.playerGraphics.lineTo(this.playerSize + 10, 0);
-    this.playerGraphics.lineTo(this.playerSize - 5, 5);
-    this.playerGraphics.fill(0xffff00); // Yellow arrow
-
-    this.addChild(this.playerGraphics);
-
-    console.log(`Player created at position: (${this.x}, ${this.y})`);
+    this.addChild(this.playerDefaultSprite);
+    this.addChild(this.playerKeyboardSprite);
   }
 
   /**
@@ -105,7 +98,7 @@ export class Player extends Container {
     const bullet = new Bullet();
 
     // Set bullet start position (from player center, using local coordinates)
-    const startX = this.x + this.playerSize;
+    const startX = this.x + this.playerSize * 0.3; // Adjust for image sprite
     const startY = this.y;
 
     bullet.x = startX;
@@ -132,27 +125,29 @@ export class Player extends Container {
 
     this.isAnimating = true;
 
-    // Quick flash animation
+    // Switch to keyboard state
+    this.setKeyboardState(true);
+
+    // Quick scale animation
     const originalScale = { x: this.scale.x, y: this.scale.y };
 
-    animate(this.scale, { x: 1.2, y: 1.2 }, { duration: 0.1 }).then(() => {
+    animate(this.scale, { x: 1.1, y: 1.1 }, { duration: 0.1 }).then(() => {
       animate(this.scale, originalScale, { duration: 0.1 }).then(() => {
         this.isAnimating = false;
+        // Return to default state after animation
+        setTimeout(() => {
+          this.setKeyboardState(false);
+        }, 200);
       });
     });
+  }
 
-    // Color flash
-    this.playerGraphics.clear();
-    this.playerGraphics.circle(0, 0, this.playerSize).fill(0xffff00); // Yellow flash
-
-    // Add face back
-    this.playerGraphics.circle(-8, -8, 3).fill(0x000000);
-    this.playerGraphics.circle(8, -8, 3).fill(0x000000);
-    this.playerGraphics.rect(-8, 5, 16, 3).fill(0x000000);
-
-    setTimeout(() => {
-      this.createPlayerGraphics();
-    }, 100);
+  /**
+   * Set keyboard state (true for typing, false for default)
+   */
+  private setKeyboardState(isTyping: boolean): void {
+    this.playerDefaultSprite.visible = !isTyping;
+    this.playerKeyboardSprite.visible = isTyping;
   }
 
   /**

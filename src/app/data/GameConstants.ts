@@ -68,6 +68,11 @@ export class GameConstants {
   public static readonly BULLET_SIZE = 8;
   public static readonly BULLET_COLOR = 0xffff00;
 
+  // Message display settings
+  public static readonly MESSAGE_MAX_WIDTH = 300; // Max width in pixels for message wrapping
+  public static readonly MESSAGE_FONT_SIZE = 28;
+  public static readonly MESSAGE_MAX_CHARS_PER_LINE = 20; // Roughly 20 characters per line
+
   // Scoring
   public static readonly POINTS_PER_LETTER = 10;
   public static readonly POINTS_PER_WORD = 100;

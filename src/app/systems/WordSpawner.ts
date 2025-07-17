@@ -328,9 +328,14 @@ export class WordSpawner {
    */
   private handleLevelComplete(): void {
     const currentLevel = GameState.getCurrentLevel();
+    console.log(
+      "WordSpawner - handleLevelComplete, currentLevel:",
+      currentLevel,
+    );
 
     if (currentLevel < 3) {
       const nextLevel = (currentLevel + 1) as 1 | 2 | 3;
+      console.log("WordSpawner - transitioning to nextLevel:", nextLevel);
 
       // Start level transition
       GameState.startLevelTransition(nextLevel);

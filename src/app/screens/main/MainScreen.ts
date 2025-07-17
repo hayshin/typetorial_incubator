@@ -150,11 +150,17 @@ export class MainScreen extends Container {
     this.currentInput += char;
     this.updateInputDisplay();
 
+    // Check if we should shoot bullet for this character
+    const shouldShoot = this.shouldShootBullet(char);
+
+    if (shouldShoot) {
+      // Shoot bullet towards active word BEFORE processing input
+      // so the last bullet is fired before word becomes inactive
+      this.shootBullet();
+    }
+
     // Try to find matching word or continue typing active word
     this.processInput();
-
-    // Shoot bullet towards active word
-    this.shootBullet();
   }
 
   /** Handle backspace */
@@ -194,16 +200,39 @@ export class MainScreen extends Container {
     }
   }
 
+  /** Check if we should shoot bullet for this character */
+  private shouldShootBullet(char: string): boolean {
+    const activeWord = this.wordSpawner.getActiveWord();
+
+    if (!activeWord || activeWord.isCompleted) {
+      // Try to find a word that matches current input including this char
+      const newInput = this.currentInput;
+      const matchingWord = this.wordSpawner.findMatchingWord(newInput);
+      return matchingWord !== null;
+    }
+
+    // If we have active word, check if this character is correct
+    const expectedChar = activeWord.getNextCharacter();
+    return expectedChar === char.toLowerCase();
+  }
+
   /** Shoot bullet towards active word */
   private shootBullet(): void {
     const activeWord = this.wordSpawner.getActiveWord();
-    if (activeWord) {
+    if (activeWord && !activeWord.isCompleted) {
       console.log(`Active word position: (${activeWord.x}, ${activeWord.y})`);
       console.log(`Player position: (${this.player.x}, ${this.player.y})`);
       console.log(
         `MainContainer position: (${this.mainContainer.x}, ${this.mainContainer.y})`,
       );
       this.player.shootBullet();
+    } else {
+      // Try to find matching word for shooting
+      const matchingWord = this.wordSpawner.findMatchingWord(this.currentInput);
+      if (matchingWord && !matchingWord.isCompleted) {
+        this.player.setTarget(matchingWord);
+        this.player.shootBullet();
+      }
     }
   }
 

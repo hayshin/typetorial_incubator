@@ -111,10 +111,6 @@ export class Player extends Container {
     bullet.x = startX;
     bullet.y = startY;
 
-    console.log(
-      `Shooting bullet from player at (${startX}, ${startY}) towards target at (${this.currentTarget.x}, ${this.currentTarget.y})`,
-    );
-
     // Set bullet target
     bullet.setTarget(this.currentTarget);
 

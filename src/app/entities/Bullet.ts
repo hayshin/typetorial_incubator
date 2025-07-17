@@ -68,8 +68,6 @@ export class Bullet extends Container {
   public setTarget(target: Word): void {
     this.target = target;
     this.calculateVelocity();
-
-    console.log(`Bullet target set to word at (${target.x}, ${target.y})`);
   }
 
   /**
@@ -200,10 +198,6 @@ export class Bullet extends Container {
    */
   private hitTarget(): void {
     this.hasReachedTarget = true;
-
-    console.log(
-      `Bullet hit target at (${this.x.toFixed(2)}, ${this.y.toFixed(2)})`,
-    );
 
     // Create hit effect
     this.createHitEffect();

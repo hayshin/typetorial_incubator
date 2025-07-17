@@ -1,5 +1,5 @@
 import { animate } from "motion";
-import type { AnimationPlaybackControls, ObjectTarget } from "motion/react";
+import type { ObjectTarget } from "motion/react";
 import type { Ticker } from "pixi.js";
 import { Container, Sprite, Texture } from "pixi.js";
 
@@ -119,7 +119,7 @@ export class GameOverScreen extends Container {
   /**
    * Handle key pressed (looking for space)
    */
-  private handleKeyPressed(char: string): void {
+  private handleKeyPressed(): void {
     // Override to handle space key specifically
     // We'll also listen for space in a different way
   }
@@ -167,7 +167,7 @@ export class GameOverScreen extends Container {
   }
 
   /** Update the screen */
-  public update(time: Ticker): void {
+  public update(): void {
     // Game over screen doesn't need updates
   }
 

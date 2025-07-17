@@ -11,7 +11,10 @@
     "indentStyle": "space"
   },
   "linter": {
-    "enabled": true
+    "enabled": true,
+    "rules": {
+      "recommended": false
+    }
   },
   "assist": {
     "enabled": true

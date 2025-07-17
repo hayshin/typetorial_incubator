@@ -18,7 +18,7 @@ export class InputManager {
   /** Whether input is currently enabled */
   private isEnabled: boolean = true;
 
-  /** Set of valid Russian characters */
+  /** Set of valid Russian characters and common punctuation */
   private readonly validChars = new Set([
     "а",
     "б",
@@ -53,6 +53,14 @@ export class InputManager {
     "э",
     "ю",
     "я",
+    " ", // space
+    ".", // period
+    ",", // comma
+    "?", // question mark
+    "!", // exclamation mark
+    "-", // dash
+    ":", // colon
+    ";", // semicolon
   ]);
 
   constructor() {

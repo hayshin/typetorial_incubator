@@ -1,7 +1,7 @@
 import type { Container } from "pixi.js";
 
 import { GameConstants } from "../data/GameConstants";
-import { WordDictionary } from "../data/WordDictionary";
+import { MessageDictionary } from "../data/MessageDictionary";
 import { Word } from "../entities/Word";
 
 /**
@@ -67,10 +67,10 @@ export class WordSpawner {
    * Spawn a new word
    */
   private spawnWord(): void {
-    const wordText = WordDictionary.getRandomWord(this.currentDifficulty);
+    const messageText = MessageDictionary.getRandomMessageText();
     const speed = this.getSpeedForDifficulty();
 
-    const word = new Word(wordText, speed);
+    const word = new Word(messageText, speed);
 
     // Set spawn position on right edge
     word.x = GameConstants.WORD_SPAWN_X;

@@ -86,16 +86,8 @@
 interface Message {
     text: string;
     author: string;
-    level: 1 | 2; // Сообщения только для уровней 1 и 2
+    level: 1 | 2 | 3; // Сообщения только для уровней 1 и 2
     // difficulty?: 'easy' | 'medium' | 'hard'; // Опционально для фильтрации
-}
-```
-
-### Текст для третьего уровня
-```typescript
-interface BossText {
-    text: string;
-    difficulty?: 'easy' | 'medium' | 'hard';
 }
 ```
 

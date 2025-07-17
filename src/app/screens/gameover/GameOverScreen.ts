@@ -1,6 +1,6 @@
 import { animate } from "motion";
 import type { ObjectTarget } from "motion/react";
-import type { Ticker } from "pixi.js";
+
 import { Container, Sprite, Texture } from "pixi.js";
 
 import { GameState } from "../../core/GameState";

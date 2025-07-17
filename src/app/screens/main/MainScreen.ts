@@ -306,10 +306,13 @@ export class MainScreen extends Container {
   }
 
   /** Handle level advance */
-  private async handleLevelAdvance(nextLevel: 1 | 2 | 3): Promise<void> {
+  private async handleLevelAdvance(): Promise<void> {
     // Stop spawning and disable input
     this.wordSpawner.stopSpawning();
     this.inputManager.setEnabled(false);
+
+    // Clear current input and reset state for new level
+    this.clearInput();
 
     // Show level intro screen
     await engine().navigation.showScreen(LevelIntroScreen);

@@ -90,11 +90,6 @@ export class WordSpawner {
 
       // Update progress
       this.updateLevelProgress();
-
-      // Check if level should advance
-      if (this.remainingMessages.length === 0) {
-        this.handleLevelComplete();
-      }
     } else {
       // Fallback to random message
       messageText = MessageDictionary.getRandomMessageText();
@@ -149,6 +144,11 @@ export class WordSpawner {
       }
       return true;
     });
+
+    // Check if level should advance after cleaning up words
+    if (this.remainingMessages.length === 0 && this.activeWords.length === 0) {
+      this.handleLevelComplete();
+    }
   }
 
   /**
@@ -302,7 +302,8 @@ export class WordSpawner {
     if (currentLevel === 1 || currentLevel === 2) {
       // Get all messages for current level
       const levelMessages = MessageDictionary.getMessagesByLevel(currentLevel);
-      this.remainingMessages = levelMessages.map((msg) => msg.text);
+      // this.remainingMessages = levelMessages.map((msg) => msg.text);
+      this.remainingMessages = levelMessages.slice(0, 1).map((msg) => msg.text);
       this.totalMessages = this.remainingMessages.length;
     } else {
       // Level 3 doesn't use messages from dictionary

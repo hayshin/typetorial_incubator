@@ -5,10 +5,12 @@
 
 import messagesData from "./messages.json";
 
+export type Level = 1 | 2 | 3;
+
 export interface MessageEntry {
   text: string;
   author: string;
-  level: 1 | 2;
+  level: Level;
 }
 
 export class MessageDictionary {
@@ -27,7 +29,7 @@ export class MessageDictionary {
   /**
    * Get a random message by level
    */
-  public static getRandomMessageByLevel(level: 1 | 2): MessageEntry {
+  public static getRandomMessageByLevel(level: Level): MessageEntry {
     const filteredMessages = MessageDictionary.messages.filter(
       (message) => message.level === level,
     );
@@ -55,7 +57,7 @@ export class MessageDictionary {
   /**
    * Get all messages for specific level
    */
-  public static getMessagesByLevel(level: 1 | 2): MessageEntry[] {
+  public static getMessagesByLevel(level: Level): MessageEntry[] {
     return MessageDictionary.messages.filter(
       (message) => message.level === level,
     );
@@ -78,7 +80,7 @@ export class MessageDictionary {
   /**
    * Get message text by level
    */
-  public static getRandomMessageTextByLevel(level: 1 | 2): string {
+  public static getRandomMessageTextByLevel(level: Level): string {
     return MessageDictionary.getRandomMessageByLevel(level).text;
   }
 
@@ -112,7 +114,7 @@ export class MessageDictionary {
   /**
    * Get message count by level
    */
-  public static getMessageCountByLevel(level: 1 | 2): number {
+  public static getMessageCountByLevel(level: Level): number {
     return MessageDictionary.messages.filter(
       (message) => message.level === level,
     ).length;

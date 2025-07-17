@@ -1,6 +1,5 @@
 import { animate } from "motion";
 import type { ObjectTarget } from "motion/react";
-import type { Ticker } from "pixi.js";
 import { Container, Sprite, Texture } from "pixi.js";
 
 import { GameState } from "../../core/GameState";
@@ -191,12 +190,13 @@ export class LevelIntroScreen extends Container {
     switch (currentLevel) {
       case 1:
       case 2:
-      case 3:
+      case 3: {
         // For now, all levels use MainScreen
         // In the future, we can create separate level screens
         const { MainScreen } = await import("../main/MainScreen");
         await engine().navigation.showScreen(MainScreen);
         break;
+      }
     }
   }
 

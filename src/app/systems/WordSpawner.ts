@@ -72,8 +72,20 @@ export class WordSpawner {
 
     const word = new Word(wordText, speed);
 
+    // Set spawn position on right edge
+    word.x = GameConstants.WORD_SPAWN_X;
+    word.y = this.getRandomSpawnY();
+
     this.activeWords.push(word);
     this.container.addChild(word);
+  }
+
+  /**
+   * Get random Y position for spawning
+   */
+  private getRandomSpawnY(): number {
+    const { min, max } = GameConstants.WORD_SPAWN_Y_RANGE;
+    return Math.random() * (max - min) + min;
   }
 
   /**

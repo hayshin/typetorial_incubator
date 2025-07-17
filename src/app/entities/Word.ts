@@ -22,6 +22,10 @@ export class Word extends Container {
   /** Movement speed in pixels per second */
   private speed: number;
 
+  /** Velocity components for angled movement */
+  private velocityX: number;
+  private velocityY: number;
+
   /** Whether this word is currently being typed */
   public isActive: boolean = false;
 
@@ -36,6 +40,11 @@ export class Word extends Container {
 
     this.targetText = text.toLowerCase();
     this.speed = speed || GameConstants.WORD_SPEED;
+
+    // Set random angle for movement (between -30 and 30 degrees)
+    const angle = ((Math.random() - 0.5) * Math.PI) / 3; // -π/6 to π/6 radians
+    this.velocityX = -this.speed * Math.cos(angle); // Negative for leftward movement
+    this.velocityY = this.speed * Math.sin(angle);
 
     // Create text display for typed characters (initially empty)
     this.typedTextDisplay = new Text({
@@ -82,8 +91,21 @@ export class Word extends Container {
   public update(deltaTime: number): void {
     if (this.isCompleted) return;
 
-    // Move left
-    this.x -= this.speed * deltaTime;
+    // Move based on velocity
+    this.x += this.velocityX * deltaTime;
+    this.y += this.velocityY * deltaTime;
+
+    // Check top and bottom bounds and bounce
+    const gameHeight = GameConstants.GAME_HEIGHT;
+
+    if (this.y < -gameHeight / 2) {
+      this.y = -gameHeight / 2;
+      this.velocityY = -this.velocityY; // Bounce back
+    }
+    if (this.y > gameHeight / 2) {
+      this.y = gameHeight / 2;
+      this.velocityY = -this.velocityY; // Bounce back
+    }
 
     // Check if reached left edge
     if (this.x < GameConstants.WORD_DESTROY_X) {

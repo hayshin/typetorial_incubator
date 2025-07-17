@@ -4,12 +4,13 @@ import type { AnimationPlaybackControls } from "motion/react";
 import type { Ticker } from "pixi.js";
 import { Container } from "pixi.js";
 
+import { InputManager } from "../../core/InputManager";
+import type { Word } from "../../entities/Word";
 import { engine } from "../../getEngine";
 import { PausePopup } from "../../popups/PausePopup";
 import { SettingsPopup } from "../../popups/SettingsPopup";
-// import { Button } from "../../ui/Button";
-
-// import { Bouncer } from "./Bouncer";
+import { WordSpawner } from "../../systems/WordSpawner";
+import { Label } from "../../ui/Label";
 
 /** The screen that holds the app */
 export class MainScreen extends Container {
@@ -19,17 +20,32 @@ export class MainScreen extends Container {
   public mainContainer: Container;
   private pauseButton: FancyButton;
   private settingsButton: FancyButton;
-  // private addButton: FancyButton;
-  // private removeButton: FancyButton;
-  // private bouncer: Bouncer;
   private paused = false;
+
+  // Game components
+  private inputManager: InputManager;
+  private wordSpawner: WordSpawner;
+  private gameContainer: Container;
+
+  // UI elements
+  private currentInputDisplay: Label;
+  private scoreDisplay: Label;
+  private livesDisplay: Label;
+
+  // Game state
+  private score: number = 0;
+  private lives: number = 3;
+  private currentInput: string = "";
 
   constructor() {
     super();
 
     this.mainContainer = new Container();
     this.addChild(this.mainContainer);
-    // this.bouncer = new Bouncer();
+
+    // Initialize game components
+    this.initGame();
+    this.initUI();
 
     const buttonAnimations = {
       hover: {
@@ -64,48 +80,184 @@ export class MainScreen extends Container {
       engine().navigation.presentPopup(SettingsPopup),
     );
     this.addChild(this.settingsButton);
+  }
 
-    // this.addButton = new Button({
-    //   text: "Add",
-    //   width: 175,
-    //   height: 110,
-    // });
-    // this.addButton.onPress.connect(() => this.bouncer.add());
-    // this.addChild(this.addButton);
+  /** Initialize game components */
+  private initGame(): void {
+    // Create game container for words
+    this.gameContainer = new Container();
+    this.mainContainer.addChild(this.gameContainer);
 
-    // this.removeButton = new Button({
-    //   text: "Remove",
-    //   width: 175,
-    //   height: 110,
-    // });
-    // this.removeButton.onPress.connect(() => this.bouncer.remove());
-    // this.addChild(this.removeButton);
+    // Initialize input manager
+    this.inputManager = new InputManager();
+    this.inputManager.onCharacterTyped = this.handleCharacterTyped.bind(this);
+    this.inputManager.onBackspace = this.handleBackspace.bind(this);
+
+    // Initialize word spawner
+    this.wordSpawner = new WordSpawner(this.gameContainer);
+    this.wordSpawner.onWordReachedEdge = this.handleWordReachedEdge.bind(this);
+    this.wordSpawner.onWordCompleted = this.handleWordCompleted.bind(this);
+  }
+
+  /** Initialize UI elements */
+  private initUI(): void {
+    // Current input display
+    this.currentInputDisplay = new Label({
+      text: "",
+      style: {
+        fontSize: 24,
+        fill: 0x00ff00,
+      },
+    });
+    this.currentInputDisplay.y = 50;
+    this.addChild(this.currentInputDisplay);
+
+    // Score display
+    this.scoreDisplay = new Label({
+      text: `Score: ${this.score}`,
+      style: {
+        fontSize: 20,
+        fill: 0xffffff,
+      },
+    });
+    this.scoreDisplay.y = 80;
+    this.addChild(this.scoreDisplay);
+
+    // Lives display
+    this.livesDisplay = new Label({
+      text: `Lives: ${this.lives}`,
+      style: {
+        fontSize: 20,
+        fill: 0xff0000,
+      },
+    });
+    this.livesDisplay.y = 110;
+    this.addChild(this.livesDisplay);
+  }
+
+  /** Handle character typed */
+  private handleCharacterTyped(char: string): void {
+    this.currentInput += char;
+    this.updateInputDisplay();
+
+    // Try to find matching word or continue typing active word
+    this.processInput();
+  }
+
+  /** Handle backspace */
+  private handleBackspace(): void {
+    if (this.currentInput.length > 0) {
+      this.currentInput = this.currentInput.slice(0, -1);
+      this.updateInputDisplay();
+    }
+  }
+
+  /** Process current input */
+  private processInput(): void {
+    // If no active word, try to find matching word
+    let activeWord = this.wordSpawner.getActiveWord();
+
+    if (!activeWord) {
+      activeWord = this.wordSpawner.findMatchingWord(this.currentInput);
+      if (activeWord) {
+        this.wordSpawner.setActiveWord(activeWord);
+      }
+    }
+
+    // If we have active word, try typing on it
+    if (activeWord) {
+      const lastChar = this.currentInput[this.currentInput.length - 1];
+      const success = activeWord.typeCharacter(lastChar);
+
+      if (!success) {
+        // Wrong character, clear input
+        this.currentInput = "";
+        this.updateInputDisplay();
+        this.wordSpawner.setActiveWord(null);
+      }
+    }
+  }
+
+  /** Update input display */
+  private updateInputDisplay(): void {
+    this.currentInputDisplay.text = `Input: ${this.currentInput}`;
+  }
+
+  /** Handle word reaching edge */
+  private handleWordReachedEdge(word: Word): void {
+    this.lives--;
+    this.updateLivesDisplay();
+
+    if (this.lives <= 0) {
+      this.gameOver();
+    }
+  }
+
+  /** Handle word completed */
+  private handleWordCompleted(word: Word): void {
+    this.score += word.targetText.length * 10;
+    this.updateScoreDisplay();
+
+    // Clear input and deactivate word
+    this.currentInput = "";
+    this.updateInputDisplay();
+    this.wordSpawner.setActiveWord(null);
+  }
+
+  /** Update score display */
+  private updateScoreDisplay(): void {
+    this.scoreDisplay.text = `Score: ${this.score}`;
+  }
+
+  /** Update lives display */
+  private updateLivesDisplay(): void {
+    this.livesDisplay.text = `Lives: ${this.lives}`;
+  }
+
+  /** Game over */
+  private gameOver(): void {
+    this.wordSpawner.stopSpawning();
+    this.inputManager.setEnabled(false);
+
+    // TODO: Show game over screen
+    console.log("Game Over! Final Score:", this.score);
   }
 
   /** Prepare the screen just before showing */
   public prepare() {}
 
   /** Update the screen */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public update(_time: Ticker) {
+  public update(time: Ticker) {
     if (this.paused) return;
-    // this.bouncer.update();
+
+    // Update word spawner
+    this.wordSpawner.update(time.deltaMS / 1000);
   }
 
   /** Pause gameplay - automatically fired when a popup is presented */
   public async pause() {
     this.mainContainer.interactiveChildren = false;
     this.paused = true;
+    this.inputManager.setEnabled(false);
   }
 
   /** Resume gameplay */
   public async resume() {
     this.mainContainer.interactiveChildren = true;
     this.paused = false;
+    this.inputManager.setEnabled(true);
   }
 
   /** Fully reset */
-  public reset() {}
+  public reset() {
+    this.score = 0;
+    this.lives = 3;
+    this.currentInput = "";
+    this.wordSpawner.clearAllWords();
+    this.updateScoreDisplay();
+    this.updateLivesDisplay();
+    this.updateInputDisplay();
+  }
 
   /** Resize the screen, fired whenever window size changes */
   public resize(width: number, height: number) {
@@ -118,12 +270,11 @@ export class MainScreen extends Container {
     this.pauseButton.y = 30;
     this.settingsButton.x = width - 30;
     this.settingsButton.y = 30;
-    // this.removeButton.x = width / 2 - 100;
-    // this.removeButton.y = height - 75;
-    // this.addButton.x = width / 2 + 100;
-    // this.addButton.y = height - 75;
 
-    // this.bouncer.resize(width, height);
+    // Position UI elements
+    this.currentInputDisplay.x = 50;
+    this.scoreDisplay.x = 50;
+    this.livesDisplay.x = 50;
   }
 
   /** Show screen with animations */
@@ -148,7 +299,9 @@ export class MainScreen extends Container {
     }
 
     await finalPromise;
-    // this.bouncer.show(this);
+
+    // Start the game
+    this.wordSpawner.startSpawning();
   }
 
   /** Hide screen with animations */

@@ -8,27 +8,32 @@ import { InputManager } from "../../core/InputManager";
 import { engine } from "../../getEngine";
 import { Label } from "../../ui/Label";
 import { RoundedBox } from "../../ui/RoundedBox";
-import { LevelIntroScreen } from "../levels/LevelIntroScreen";
 
-/** Screen shown when game is over */
-export class GameOverScreen extends Container {
+/** Screen shown before each level starts */
+export class LevelIntroScreen extends Container {
   /** Assets bundles required by this screen */
   public static assetBundles = ["main"];
 
   /** The dark semi-transparent background */
   private bg: Sprite;
-  /** Container for the game over UI */
+  /** Container for the level intro UI */
   private panel: Container;
   /** The panel background */
   private panelBase: RoundedBox;
-  /** Game over title */
+  /** Level title */
   private titleLabel: Label;
+  /** Level description */
+  private descriptionLabel: Label;
   /** Subtitle with instructions */
   private subtitleLabel: Label;
-  /** Score display */
-  private scoreLabel: Label;
   /** Input manager for space key detection */
   private inputManager: InputManager;
+
+  /** Level information */
+  private levelInfo: {
+    title: string;
+    description: string;
+  };
 
   constructor() {
     super();
@@ -45,8 +50,8 @@ export class GameOverScreen extends Container {
 
     // Create panel background
     this.panelBase = new RoundedBox({
-      width: 500,
-      height: 350,
+      width: 600,
+      height: 400,
       color: 0x1a1a1a,
       borderColor: 0x444444,
       borderWidth: 2,
@@ -55,48 +60,87 @@ export class GameOverScreen extends Container {
 
     // Create title label
     this.titleLabel = new Label({
-      text: "GAME OVER",
+      text: "LEVEL 1",
       style: {
         fontSize: 48,
-        fill: 0xff4444,
+        fill: 0x4488ff,
         fontWeight: "bold",
       },
     });
     this.titleLabel.anchor.set(0.5);
-    this.titleLabel.y = -80;
+    this.titleLabel.y = -120;
     this.panel.addChild(this.titleLabel);
 
-    // Create score label
-    this.scoreLabel = new Label({
-      text: "Final Score: 0",
+    // Create description label
+    this.descriptionLabel = new Label({
+      text: "Type the incoming messages before they reach you!",
       style: {
-        fontSize: 24,
+        fontSize: 20,
         fill: 0xffffff,
+        wordWrap: true,
+        wordWrapWidth: 500,
+        align: "center",
       },
     });
-    this.scoreLabel.anchor.set(0.5);
-    this.scoreLabel.y = -20;
-    this.panel.addChild(this.scoreLabel);
+    this.descriptionLabel.anchor.set(0.5);
+    this.descriptionLabel.y = -20;
+    this.panel.addChild(this.descriptionLabel);
 
     // Create subtitle label
     this.subtitleLabel = new Label({
-      text: "Press SPACE to try again",
+      text: "Press SPACE to begin",
       style: {
         fontSize: 18,
         fill: 0xcccccc,
       },
     });
     this.subtitleLabel.anchor.set(0.5);
-    this.subtitleLabel.y = 40;
+    this.subtitleLabel.y = 80;
     this.panel.addChild(this.subtitleLabel);
 
     // Setup input manager for space key
     this.inputManager = new InputManager();
-    this.inputManager.onCharacterTyped = this.handleKeyPressed.bind(this);
     this.inputManager.setEnabled(false); // Will be enabled when screen is shown
+
+    // Set default level info
+    this.levelInfo = this.getLevelInfo(1);
 
     // Add blinking animation to subtitle
     this.addBlinkingEffect();
+  }
+
+  /**
+   * Get level information based on level number
+   */
+  private getLevelInfo(level: 1 | 2 | 3): {
+    title: string;
+    description: string;
+  } {
+    switch (level) {
+      case 1:
+        return {
+          title: "LEVEL 1: MESSAGES",
+          description:
+            "Type the incoming messages before they reach you! Messages will come from the right side of the screen.",
+        };
+      case 2:
+        return {
+          title: "LEVEL 2: THE SPEAKER",
+          description:
+            "A person appears on the right side! Messages now come from their mouth. Type them quickly!",
+        };
+      case 3:
+        return {
+          title: "LEVEL 3: BOSS BATTLE",
+          description:
+            "Now YOU send messages! Type the text below to attack the boss. Defeat them before they defeat you!",
+        };
+      default:
+        return {
+          title: "LEVEL 1: MESSAGES",
+          description: "Type the incoming messages before they reach you!",
+        };
+    }
   }
 
   /**
@@ -118,21 +162,13 @@ export class GameOverScreen extends Container {
   }
 
   /**
-   * Handle key pressed (looking for space)
-   */
-  private handleKeyPressed(): void {
-    // Override to handle space key specifically
-    // We'll also listen for space in a different way
-  }
-
-  /**
    * Setup space key listener
    */
   private setupSpaceListener(): void {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === "Space" || event.key === " ") {
         event.preventDefault();
-        this.restartGame();
+        this.startLevel();
         window.removeEventListener("keydown", handleKeyDown);
       }
     };
@@ -141,38 +177,50 @@ export class GameOverScreen extends Container {
   }
 
   /**
-   * Restart the game
+   * Start the level
    */
-  private async restartGame(): Promise<void> {
+  private async startLevel(): Promise<void> {
     this.inputManager.setEnabled(false);
 
-    // Reset game state to start from level 1
-    GameState.reset();
+    // Complete the level transition in GameState
+    GameState.completeLevelTransition();
 
-    // Show level intro screen for level 1
-    await engine().navigation.showScreen(LevelIntroScreen);
+    // Navigate to the appropriate level screen
+    const currentLevel = GameState.getCurrentLevel();
+
+    switch (currentLevel) {
+      case 1:
+      case 2:
+      case 3:
+        // For now, all levels use MainScreen
+        // In the future, we can create separate level screens
+        const { MainScreen } = await import("../main/MainScreen");
+        await engine().navigation.showScreen(MainScreen);
+        break;
+    }
   }
 
   /**
-   * Update score display from GameState
+   * Update level info from GameState
    */
-  private updateScoreFromGameState(): void {
-    if (GameState.hasJustEnded()) {
-      const score = GameState.getFinalScore();
-      this.scoreLabel.text = `Final Score: ${score}`;
-      GameState.consume();
-    }
+  private updateLevelInfo(): void {
+    const level =
+      GameState.getTransitioningToLevel() || GameState.getCurrentLevel();
+    this.levelInfo = this.getLevelInfo(level as 1 | 2 | 3);
+
+    this.titleLabel.text = this.levelInfo.title;
+    this.descriptionLabel.text = this.levelInfo.description;
   }
 
   /** Prepare the screen just before showing */
   public prepare(): void {
-    // Update score from game state
-    this.updateScoreFromGameState();
+    // Update level info from game state
+    this.updateLevelInfo();
   }
 
   /** Update the screen */
   public update(): void {
-    // Game over screen doesn't need updates
+    // Level intro screen doesn't need updates
   }
 
   /** Resize the screen, fired whenever window size changes */

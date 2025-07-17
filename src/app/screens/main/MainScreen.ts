@@ -13,6 +13,7 @@ import { SettingsPopup } from "../../popups/SettingsPopup";
 import { WordSpawner } from "../../systems/WordSpawner";
 import { Label } from "../../ui/Label";
 import { GameOverScreen } from "../gameover/GameOverScreen";
+import { LevelIntroScreen } from "../levels/LevelIntroScreen";
 
 /** The screen that holds the app */
 export class MainScreen extends Container {
@@ -34,6 +35,8 @@ export class MainScreen extends Container {
   private currentInputDisplay!: Label;
   private scoreDisplay!: Label;
   private livesDisplay!: Label;
+  private levelDisplay!: Label;
+  private progressDisplay!: Label;
 
   // Game state
   private score: number = 0;
@@ -109,6 +112,7 @@ export class MainScreen extends Container {
     this.wordSpawner = new WordSpawner(this.gameContainer);
     this.wordSpawner.onWordReachedEdge = this.handleWordReachedEdge.bind(this);
     this.wordSpawner.onWordCompleted = this.handleWordCompleted.bind(this);
+    this.wordSpawner.onLevelAdvance = this.handleLevelAdvance.bind(this);
   }
 
   /** Initialize UI elements */
@@ -145,6 +149,28 @@ export class MainScreen extends Container {
     });
     this.livesDisplay.y = 110;
     this.addChild(this.livesDisplay);
+
+    // Level display
+    this.levelDisplay = new Label({
+      text: `Level: ${GameState.getCurrentLevel()}`,
+      style: {
+        fontSize: 20,
+        fill: 0x4488ff,
+      },
+    });
+    this.levelDisplay.y = 140;
+    this.addChild(this.levelDisplay);
+
+    // Progress display
+    this.progressDisplay = new Label({
+      text: `Progress: 0%`,
+      style: {
+        fontSize: 18,
+        fill: 0xcccccc,
+      },
+    });
+    this.progressDisplay.y = 170;
+    this.addChild(this.progressDisplay);
   }
 
   /** Handle character typed */
@@ -279,6 +305,16 @@ export class MainScreen extends Container {
     this.clearInput();
   }
 
+  /** Handle level advance */
+  private async handleLevelAdvance(nextLevel: 1 | 2 | 3): Promise<void> {
+    // Stop spawning and disable input
+    this.wordSpawner.stopSpawning();
+    this.inputManager.setEnabled(false);
+
+    // Show level intro screen
+    await engine().navigation.showScreen(LevelIntroScreen);
+  }
+
   /** Update score display */
   private updateScoreDisplay(): void {
     this.scoreDisplay.text = `Score: ${this.score}`;
@@ -287,6 +323,17 @@ export class MainScreen extends Container {
   /** Update lives display */
   private updateLivesDisplay(): void {
     this.livesDisplay.text = `Lives: ${this.lives}`;
+  }
+
+  /** Update level display */
+  private updateLevelDisplay(): void {
+    this.levelDisplay.text = `Level: ${GameState.getCurrentLevel()}`;
+  }
+
+  /** Update progress display */
+  private updateProgressDisplay(): void {
+    const progress = GameState.getLevelProgress();
+    this.progressDisplay.text = `Progress: ${Math.round(progress)}%`;
   }
 
   /** Game over */
@@ -313,6 +360,10 @@ export class MainScreen extends Container {
 
     // Update player and bullets
     this.player.update(time.deltaMS / 1000);
+
+    // Update UI displays
+    this.updateLevelDisplay();
+    this.updateProgressDisplay();
   }
 
   /** Pause gameplay - automatically fired when a popup is presented */
@@ -336,9 +387,12 @@ export class MainScreen extends Container {
     this.wrongCharHighlight = false;
     this.clearInput();
     this.wordSpawner.clearAllWords();
+    this.wordSpawner.resetForLevel();
     this.player.clearBullets();
     this.updateScoreDisplay();
     this.updateLivesDisplay();
+    this.updateLevelDisplay();
+    this.updateProgressDisplay();
     this.inputManager.setEnabled(true);
     GameState.reset();
   }
@@ -364,6 +418,8 @@ export class MainScreen extends Container {
     this.currentInputDisplay.x = 50;
     this.scoreDisplay.x = 50;
     this.livesDisplay.x = 50;
+    this.levelDisplay.x = 50;
+    this.progressDisplay.x = 50;
   }
 
   /** Show screen with animations */
@@ -389,7 +445,8 @@ export class MainScreen extends Container {
 
     await finalPromise;
 
-    // Start the game
+    // Reset word spawner for current level and start spawning
+    this.wordSpawner.resetForLevel();
     this.wordSpawner.startSpawning();
   }
 

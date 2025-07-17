@@ -9,6 +9,15 @@ export class GameState {
   /** Whether the game just ended */
   private static justEnded: boolean = false;
 
+  /** Current level (1, 2, or 3) */
+  private static currentLevel: 1 | 2 | 3 = 1;
+
+  /** Current progress within the level (0-100) */
+  private static levelProgress: number = 0;
+
+  /** Whether we're transitioning to a new level */
+  private static transitioningToLevel: number | null = null;
+
   /**
    * Set the final score when game ends
    */
@@ -39,10 +48,73 @@ export class GameState {
   }
 
   /**
+   * Get current level
+   */
+  public static getCurrentLevel(): 1 | 2 | 3 {
+    return GameState.currentLevel;
+  }
+
+  /**
+   * Set current level
+   */
+  public static setCurrentLevel(level: 1 | 2 | 3): void {
+    GameState.currentLevel = level;
+  }
+
+  /**
+   * Get level progress
+   */
+  public static getLevelProgress(): number {
+    return GameState.levelProgress;
+  }
+
+  /**
+   * Set level progress
+   */
+  public static setLevelProgress(progress: number): void {
+    GameState.levelProgress = Math.max(0, Math.min(100, progress));
+  }
+
+  /**
+   * Start transition to next level
+   */
+  public static startLevelTransition(nextLevel: 1 | 2 | 3): void {
+    GameState.transitioningToLevel = nextLevel;
+  }
+
+  /**
+   * Get the level we're transitioning to
+   */
+  public static getTransitioningToLevel(): number | null {
+    return GameState.transitioningToLevel;
+  }
+
+  /**
+   * Complete level transition
+   */
+  public static completeLevelTransition(): void {
+    if (GameState.transitioningToLevel !== null) {
+      GameState.currentLevel = GameState.transitioningToLevel as 1 | 2 | 3;
+      GameState.transitioningToLevel = null;
+      GameState.levelProgress = 0;
+    }
+  }
+
+  /**
+   * Check if we're currently transitioning between levels
+   */
+  public static isTransitioning(): boolean {
+    return GameState.transitioningToLevel !== null;
+  }
+
+  /**
    * Reset all state
    */
   public static reset(): void {
     GameState.finalScore = 0;
     GameState.justEnded = false;
+    GameState.currentLevel = 1;
+    GameState.levelProgress = 0;
+    GameState.transitioningToLevel = null;
   }
 }

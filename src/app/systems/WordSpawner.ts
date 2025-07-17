@@ -1,5 +1,5 @@
 import type { Container } from "pixi.js";
-
+import { GameState } from "../core/GameState";
 import { GameConstants } from "../data/GameConstants";
 import { MessageDictionary } from "../data/MessageDictionary";
 import { Word } from "../entities/Word";
@@ -35,8 +35,18 @@ export class WordSpawner {
   /** Callback when word is completed */
   public onWordCompleted?: (word: Word) => void;
 
+  /** Callback when level should advance */
+  public onLevelAdvance?: (nextLevel: 1 | 2 | 3) => void;
+
+  /** Messages remaining in current level */
+  private remainingMessages: string[] = [];
+
+  /** Total messages for current level */
+  private totalMessages: number = 0;
+
   constructor(container: Container) {
     this.container = container;
+    this.initializeLevel();
   }
 
   /**
@@ -67,9 +77,30 @@ export class WordSpawner {
    * Spawn a new word
    */
   private spawnWord(): void {
-    const messageText = MessageDictionary.getRandomMessageText();
-    const speed = this.getSpeedForDifficulty();
+    let messageText: string;
 
+    // Get message based on current level and remaining messages
+    if (this.remainingMessages.length > 0) {
+      // Use message from remaining queue
+      const randomIndex = Math.floor(
+        Math.random() * this.remainingMessages.length,
+      );
+      messageText = this.remainingMessages[randomIndex];
+      this.remainingMessages.splice(randomIndex, 1);
+
+      // Update progress
+      this.updateLevelProgress();
+
+      // Check if level should advance
+      if (this.remainingMessages.length === 0) {
+        this.handleLevelComplete();
+      }
+    } else {
+      // Fallback to random message
+      messageText = MessageDictionary.getRandomMessageText();
+    }
+
+    const speed = this.getSpeedForDifficulty();
     const word = new Word(messageText, speed);
 
     // Set spawn position on right edge
@@ -260,6 +291,79 @@ export class WordSpawner {
     this.container.addChild(word);
 
     return word;
+  }
+
+  /**
+   * Initialize level - load messages for current level
+   */
+  private initializeLevel(): void {
+    const currentLevel = GameState.getCurrentLevel();
+
+    if (currentLevel === 1 || currentLevel === 2) {
+      // Get all messages for current level
+      const levelMessages = MessageDictionary.getMessagesByLevel(currentLevel);
+      this.remainingMessages = levelMessages.map((msg) => msg.text);
+      this.totalMessages = this.remainingMessages.length;
+    } else {
+      // Level 3 doesn't use messages from dictionary
+      this.remainingMessages = [];
+      this.totalMessages = 0;
+    }
+
+    // Reset progress
+    GameState.setLevelProgress(0);
+  }
+
+  /**
+   * Update level progress based on remaining messages
+   */
+  private updateLevelProgress(): void {
+    if (this.totalMessages > 0) {
+      const completed = this.totalMessages - this.remainingMessages.length;
+      const progress = (completed / this.totalMessages) * 100;
+      GameState.setLevelProgress(progress);
+    }
+  }
+
+  /**
+   * Handle level completion
+   */
+  private handleLevelComplete(): void {
+    const currentLevel = GameState.getCurrentLevel();
+
+    if (currentLevel < 3) {
+      const nextLevel = (currentLevel + 1) as 1 | 2 | 3;
+
+      // Start level transition
+      GameState.startLevelTransition(nextLevel);
+
+      // Notify about level advance
+      if (this.onLevelAdvance) {
+        this.onLevelAdvance(nextLevel);
+      }
+    }
+  }
+
+  /**
+   * Reset for new level
+   */
+  public resetForLevel(): void {
+    this.clearAllWords();
+    this.initializeLevel();
+  }
+
+  /**
+   * Get remaining message count
+   */
+  public getRemainingMessageCount(): number {
+    return this.remainingMessages.length;
+  }
+
+  /**
+   * Get total message count for current level
+   */
+  public getTotalMessageCount(): number {
+    return this.totalMessages;
   }
 
   /**

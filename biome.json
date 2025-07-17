@@ -1,0 +1,41 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.1.1/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "formatter": {
+    "enabled": true,
+    "indentWidth": 2,
+    "indentStyle": "space"
+  },
+  "linter": {
+    "enabled": true
+  },
+  "assist": {
+    "enabled": true
+  },
+  "json": {
+    "parser": { "allowComments": true, "allowTrailingCommas": true }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.svelte"],
+
+      "linter": {
+        "rules": {
+          "style": {
+            "useConst": "off",
+            "useImportType": "off"
+          },
+
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    }
+  ]
+}

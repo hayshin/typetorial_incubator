@@ -1,24 +1,31 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import { setEngine } from "./app/getEngine";
+import { LoadScreen } from "./app/screens/LoadScreen";
+import { MainScreen } from "./app/screens/main/MainScreen";
+import { userSettings } from "./app/utils/userSettings";
+import { CreationEngine } from "./engine/engine";
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+/**
+ * Importing these modules will automatically register there plugins with the engine.
+ */
+import "@pixi/sound";
+// import "@esotericsoftware/spine-pixi-v8";
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+// Create a new creation engine instance
+const engine = new CreationEngine();
+setEngine(engine);
+
+(async () => {
+  // Initialize the creation engine instance
+  await engine.init({
+    background: "#1E1E1E",
+    resizeOptions: { minWidth: 768, minHeight: 1024, letterbox: false },
+  });
+
+  // Initialize the user settings
+  userSettings.init();
+
+  // Show the load screen
+  await engine.navigation.showScreen(LoadScreen);
+  // Show the main screen once the load screen is dismissed
+  await engine.navigation.showScreen(MainScreen);
+})();

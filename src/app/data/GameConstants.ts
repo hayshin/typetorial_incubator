@@ -1,33 +1,72 @@
+import { resize } from "../../engine/resize/resize.ts";
+
 /**
  * Game constants and configuration values
  */
-
 export class GameConstants {
-  // Word movement
-  public static readonly WORD_SPEED = 100; // pixels per second
-  public static readonly WORD_SPAWN_INTERVAL = 2000; // milliseconds
-  public static readonly WORD_SPAWN_Y_RANGE = { min: 100, max: 500 }; // Y position range
+  // Base design dimensions
+  private static readonly BASE_WIDTH = 1024;
+  private static readonly BASE_HEIGHT = 768;
+  private static readonly MARGIN = 50;
 
-  // Screen dimensions
-  public static readonly GAME_WIDTH = 1024;
-  public static readonly GAME_HEIGHT = 768;
-  public static readonly WORD_SPAWN_X = 900; // Right edge spawn position
-  public static readonly WORD_DESTROY_X = -100; // Left edge destroy position
+  // Get current game dimensions
+  public static getGameSize() {
+    const { width, height } = resize(
+      window.innerWidth - GameConstants.MARGIN * 2,
+      window.innerHeight - GameConstants.MARGIN * 2,
+      GameConstants.BASE_WIDTH,
+      GameConstants.BASE_HEIGHT,
+      true,
+    );
+    return { width, height };
+  }
 
-  // Player settings
+  // Screen dimensions (dynamic)
+  public static get GAME_WIDTH() {
+    return GameConstants.getGameSize().width;
+  }
+
+  public static get GAME_HEIGHT() {
+    return GameConstants.getGameSize().height;
+  }
+
+  public static get WORD_SPAWN_X() {
+    return GameConstants.GAME_WIDTH / 2 - GameConstants.MARGIN;
+  }
+
+  public static get WORD_DESTROY_X() {
+    return -GameConstants.GAME_WIDTH / 2 - GameConstants.MARGIN;
+  }
+
+  public static get PLAYER_X() {
+    return -GameConstants.GAME_WIDTH / 2 + GameConstants.MARGIN + 50;
+  }
+
+  public static get MONSTER_X() {
+    return GameConstants.GAME_WIDTH / 2 - GameConstants.MARGIN - 100;
+  }
+
+  public static get WORD_SPAWN_Y_RANGE() {
+    return {
+      min: -GameConstants.GAME_HEIGHT / 2 + GameConstants.MARGIN,
+      max: GameConstants.GAME_HEIGHT / 2 - GameConstants.MARGIN,
+    };
+  }
+
+  // Fixed constants
+  public static readonly WORD_SPEED = 300;
+  public static readonly WORD_SPAWN_INTERVAL = 500;
   public static readonly PLAYER_LIVES = 3;
-  public static readonly PLAYER_X = 100; // Player position on left side
-  public static readonly MONSTER_X = 800; // Monster position on right side
 
   // Typing settings
-  public static readonly TYPING_TYPED_COLOR = 0x888888; // Gray for typed letters
-  public static readonly TYPING_ERROR_COLOR = 0xff0000; // Red for wrong letters
-  public static readonly TYPING_DEFAULT_COLOR = 0xffffff; // White for untyped letters
+  public static readonly TYPING_TYPED_COLOR = 0x888888;
+  public static readonly TYPING_ERROR_COLOR = 0xff0000;
+  public static readonly TYPING_DEFAULT_COLOR = 0xffffff;
 
   // Bullet settings
-  public static readonly BULLET_SPEED = 300; // pixels per second
+  public static readonly BULLET_SPEED = 300;
   public static readonly BULLET_SIZE = 8;
-  public static readonly BULLET_COLOR = 0xffff00; // Yellow bullets
+  public static readonly BULLET_COLOR = 0xffff00;
 
   // Scoring
   public static readonly POINTS_PER_LETTER = 10;

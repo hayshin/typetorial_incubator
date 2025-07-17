@@ -1,6 +1,5 @@
 import { animate } from "motion";
 import { Container, Text } from "pixi.js";
-
 import { GameConstants } from "../data/GameConstants";
 
 /**

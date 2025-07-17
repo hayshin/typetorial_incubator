@@ -5,6 +5,7 @@ import type { Ticker } from "pixi.js";
 import { Container } from "pixi.js";
 
 import { InputManager } from "../../core/InputManager";
+import { GameConstants } from "../../data/GameConstants";
 import type { Word } from "../../entities/Word";
 import { engine } from "../../getEngine";
 import { PausePopup } from "../../popups/PausePopup";

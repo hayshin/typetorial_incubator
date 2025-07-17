@@ -6,6 +6,7 @@ import { Container } from "pixi.js";
 
 import { InputManager } from "../../core/InputManager";
 import { GameConstants } from "../../data/GameConstants";
+import { Player } from "../../entities/Player";
 import type { Word } from "../../entities/Word";
 import { engine } from "../../getEngine";
 import { PausePopup } from "../../popups/PausePopup";
@@ -24,14 +25,15 @@ export class MainScreen extends Container {
   private paused = false;
 
   // Game components
-  private inputManager: InputManager;
-  private wordSpawner: WordSpawner;
-  private gameContainer: Container;
+  private inputManager!: InputManager;
+  private wordSpawner!: WordSpawner;
+  private gameContainer!: Container;
+  private player!: Player;
 
   // UI elements
-  private currentInputDisplay: Label;
-  private scoreDisplay: Label;
-  private livesDisplay: Label;
+  private currentInputDisplay!: Label;
+  private scoreDisplay!: Label;
+  private livesDisplay!: Label;
 
   // Game state
   private score: number = 0;
@@ -89,6 +91,13 @@ export class MainScreen extends Container {
     this.gameContainer = new Container();
     this.mainContainer.addChild(this.gameContainer);
 
+    // Initialize player
+    this.player = new Player();
+    this.mainContainer.addChild(this.player);
+
+    console.log(`Player initialized at: (${this.player.x}, ${this.player.y})`);
+    console.log(`MainContainer will be positioned at center during resize`);
+
     // Initialize input manager
     this.inputManager = new InputManager();
     this.inputManager.onCharacterTyped = this.handleCharacterTyped.bind(this);
@@ -143,6 +152,9 @@ export class MainScreen extends Container {
 
     // Try to find matching word or continue typing active word
     this.processInput();
+
+    // Shoot bullet towards active word
+    this.shootBullet();
   }
 
   /** Handle backspace */
@@ -162,6 +174,8 @@ export class MainScreen extends Container {
       activeWord = this.wordSpawner.findMatchingWord(this.currentInput);
       if (activeWord) {
         this.wordSpawner.setActiveWord(activeWord);
+        // Set player target when activating a word
+        this.player.setTarget(activeWord);
       }
     }
 
@@ -175,7 +189,21 @@ export class MainScreen extends Container {
         this.currentInput = "";
         this.updateInputDisplay();
         this.wordSpawner.setActiveWord(null);
+        this.player.setTarget(null);
       }
+    }
+  }
+
+  /** Shoot bullet towards active word */
+  private shootBullet(): void {
+    const activeWord = this.wordSpawner.getActiveWord();
+    if (activeWord) {
+      console.log(`Active word position: (${activeWord.x}, ${activeWord.y})`);
+      console.log(`Player position: (${this.player.x}, ${this.player.y})`);
+      console.log(
+        `MainContainer position: (${this.mainContainer.x}, ${this.mainContainer.y})`,
+      );
+      this.player.shootBullet();
     }
   }
 
@@ -185,7 +213,7 @@ export class MainScreen extends Container {
   }
 
   /** Handle word reaching edge */
-  private handleWordReachedEdge(word: Word): void {
+  private handleWordReachedEdge(_word: Word): void {
     this.lives--;
     this.updateLivesDisplay();
 
@@ -203,6 +231,7 @@ export class MainScreen extends Container {
     this.currentInput = "";
     this.updateInputDisplay();
     this.wordSpawner.setActiveWord(null);
+    this.player.setTarget(null);
   }
 
   /** Update score display */
@@ -233,6 +262,9 @@ export class MainScreen extends Container {
 
     // Update word spawner
     this.wordSpawner.update(time.deltaMS / 1000);
+
+    // Update player and bullets
+    this.player.update(time.deltaMS / 1000);
   }
 
   /** Pause gameplay - automatically fired when a popup is presented */
@@ -255,6 +287,8 @@ export class MainScreen extends Container {
     this.lives = 3;
     this.currentInput = "";
     this.wordSpawner.clearAllWords();
+    this.player.clearBullets();
+    this.player.setTarget(null);
     this.updateScoreDisplay();
     this.updateLivesDisplay();
     this.updateInputDisplay();
@@ -267,6 +301,11 @@ export class MainScreen extends Container {
 
     this.mainContainer.x = centerX;
     this.mainContainer.y = centerY;
+
+    console.log(
+      `Screen resized to ${width}x${height}, mainContainer positioned at (${centerX}, ${centerY})`,
+    );
+    console.log(`Player local position: (${this.player.x}, ${this.player.y})`);
     this.pauseButton.x = 30;
     this.pauseButton.y = 30;
     this.settingsButton.x = width - 30;

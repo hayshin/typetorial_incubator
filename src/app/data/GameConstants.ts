@@ -55,7 +55,7 @@ export class GameConstants {
 
   // Fixed constants
   public static readonly WORD_SPEED = 300;
-  public static readonly WORD_SPAWN_INTERVAL = 500;
+  public static readonly WORD_SPAWN_INTERVAL = 1000;
   public static readonly PLAYER_LIVES = 3;
 
   // Typing settings
@@ -64,7 +64,7 @@ export class GameConstants {
   public static readonly TYPING_DEFAULT_COLOR = 0xffffff;
 
   // Bullet settings
-  public static readonly BULLET_SPEED = 300;
+  public static readonly BULLET_SPEED = 1500;
   public static readonly BULLET_SIZE = 8;
   public static readonly BULLET_COLOR = 0xffff00;
 

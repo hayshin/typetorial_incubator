@@ -5,6 +5,7 @@ import type { Ticker } from "pixi.js";
 import { Container } from "pixi.js";
 import { GameState } from "../../core/GameState";
 import { InputManager } from "../../core/InputManager";
+import { Level3TextManager } from "../../data/Level3TextManager";
 import { Player } from "../../entities/Player";
 import type { Word } from "../../entities/Word";
 import { engine } from "../../getEngine";
@@ -12,6 +13,7 @@ import { PausePopup } from "../../popups/PausePopup";
 import { SettingsPopup } from "../../popups/SettingsPopup";
 import { WordSpawner } from "../../systems/WordSpawner";
 import { Label } from "../../ui/Label";
+import { TypingTextDisplay } from "../../ui/TypingTextDisplay";
 import { GameOverScreen } from "../gameover/GameOverScreen";
 import { LevelIntroScreen } from "../levels/LevelIntroScreen";
 
@@ -37,6 +39,10 @@ export class MainScreen extends Container {
   private livesDisplay!: Label;
   private levelDisplay!: Label;
   private progressDisplay!: Label;
+
+  // Level 3 components
+  private typingTextDisplay!: TypingTextDisplay;
+  private currentBossText: string = "";
 
   // Game state
   private score: number = 0;
@@ -171,10 +177,28 @@ export class MainScreen extends Container {
     });
     this.progressDisplay.y = 170;
     this.addChild(this.progressDisplay);
+
+    // Level 3 typing text display
+    this.typingTextDisplay = new TypingTextDisplay();
+    this.typingTextDisplay.visible = false; // Hidden by default
+    this.mainContainer.addChild(this.typingTextDisplay);
   }
 
   /** Handle character typed */
   private handleCharacterTyped(char: string): void {
+    const currentLevel = GameState.getCurrentLevel();
+
+    if (currentLevel === 3) {
+      // Level 3: Type into the text display
+      this.handleLevel3CharacterTyped(char);
+    } else {
+      // Levels 1-2: Original word matching logic
+      this.handleLevel12CharacterTyped(char);
+    }
+  }
+
+  /** Handle character typed for levels 1-2 */
+  private handleLevel12CharacterTyped(char: string): void {
     const lowerChar = char.toLowerCase();
     const activeWord = this.wordSpawner.getActiveWord();
 
@@ -214,17 +238,87 @@ export class MainScreen extends Container {
     }
   }
 
+  /** Handle character typed for level 3 */
+  private handleLevel3CharacterTyped(char: string): void {
+    if (char === " ") {
+      // Space pressed - complete current word and send it
+      this.handleLevel3SpacePressed();
+    } else {
+      // Type character into the text display
+      const success = this.typingTextDisplay.typeCharacter(char);
+      if (success) {
+        this.wrongCharHighlight = false;
+        // Check if current word is completed
+        if (this.typingTextDisplay.isCurrentWordCompleted()) {
+          // Word completed, ready to send on space press
+          console.log("Level 3 - word completed, waiting for space");
+        }
+      } else {
+        // Wrong character
+        this.wrongCharHighlight = true;
+        console.log("Level 3 - wrong character:", char);
+      }
+      this.updateLevel3InputDisplay();
+    }
+  }
+
+  /** Handle space pressed in level 3 */
+  private handleLevel3SpacePressed(): void {
+    const completedWord = this.typingTextDisplay.completeCurrentWord();
+    if (completedWord) {
+      // Send the word as a player message
+      const playerMessage = this.wordSpawner.spawnPlayerMessage(completedWord);
+      console.log("Level 3 - sent word:", completedWord);
+
+      // Check if entire text is completed
+      if (this.typingTextDisplay.isCompleted()) {
+        this.handleLevel3TextCompleted();
+      }
+    }
+  }
+
+  /** Handle level 3 text completion */
+  private handleLevel3TextCompleted(): void {
+    console.log("Level 3 - boss text completed!");
+    // TODO: Handle boss defeat and level completion
+  }
+
+  /** Update input display for level 3 */
+  private updateLevel3InputDisplay(): void {
+    const nextChar = this.typingTextDisplay.getNextExpectedCharacter();
+    let displayText = `Next: ${nextChar || "SPACE"}`;
+
+    if (this.wrongCharHighlight && nextChar) {
+      displayText += ` (Expected: ${nextChar})`;
+    }
+
+    this.currentInputDisplay.text = displayText;
+    this.currentInputDisplay.style.fill = this.wrongCharHighlight
+      ? 0xff0000
+      : 0x00ff00;
+  }
+
   /** Handle backspace */
   private handleBackspace(): void {
-    if (this.currentInput.length > 0) {
-      this.currentInput = this.currentInput.slice(0, -1);
-      this.wrongCharHighlight = false;
-      this.updateInputDisplay();
+    const currentLevel = GameState.getCurrentLevel();
 
-      // If we cleared all input, deactivate current word
-      if (this.currentInput.length === 0) {
-        this.wordSpawner.setActiveWord(null);
-        this.player.setTarget(null);
+    if (currentLevel === 3) {
+      // Level 3: Backspace in text display
+      this.typingTextDisplay.backspace();
+      this.wrongCharHighlight = false;
+      this.updateLevel3InputDisplay();
+    } else {
+      // Levels 1-2: Original logic
+      if (this.currentInput.length > 0) {
+        this.currentInput = this.currentInput.slice(0, -1);
+        this.wrongCharHighlight = false;
+        this.updateInputDisplay();
+
+        // If we cleared all input, deactivate current word
+        if (this.currentInput.length === 0) {
+          this.wordSpawner.setActiveWord(null);
+          this.player.setTarget(null);
+        }
       }
     }
   }
@@ -392,6 +486,11 @@ export class MainScreen extends Container {
     this.wordSpawner.clearAllWords();
     this.wordSpawner.resetForLevel();
     this.player.clearBullets();
+
+    // Reset level 3 components
+    this.typingTextDisplay.reset();
+    this.currentBossText = "";
+
     this.updateScoreDisplay();
     this.updateLivesDisplay();
     this.updateLevelDisplay();
@@ -427,6 +526,9 @@ export class MainScreen extends Container {
     this.livesDisplay.x = 50;
     this.levelDisplay.x = 50;
     this.progressDisplay.x = 50;
+
+    // Resize level 3 components
+    this.typingTextDisplay.resize(width, height);
   }
 
   /** Show screen with animations */
@@ -452,9 +554,35 @@ export class MainScreen extends Container {
 
     await finalPromise;
 
+    // Setup level-specific components
+    this.setupLevelComponents();
+
     // Reset word spawner for current level and start spawning
     this.wordSpawner.resetForLevel();
     this.wordSpawner.startSpawning();
+  }
+
+  /** Setup components specific to current level */
+  private setupLevelComponents(): void {
+    const currentLevel = GameState.getCurrentLevel();
+
+    if (currentLevel === 3) {
+      // Show typing text display for level 3
+      this.typingTextDisplay.visible = true;
+
+      // Get random boss text and set it
+      const bossText = Level3TextManager.getRandomText();
+      this.currentBossText = bossText.text;
+      this.typingTextDisplay.setText(this.currentBossText);
+
+      console.log("Level 3 - boss text set:", this.currentBossText);
+
+      // Update input display for level 3
+      this.updateLevel3InputDisplay();
+    } else {
+      // Hide typing text display for levels 1-2
+      this.typingTextDisplay.visible = false;
+    }
   }
 
   /** Hide screen with animations */

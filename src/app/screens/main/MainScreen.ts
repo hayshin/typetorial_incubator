@@ -14,6 +14,7 @@ import { PausePopup } from "../../popups/PausePopup";
 import { SettingsPopup } from "../../popups/SettingsPopup";
 import { WordSpawner } from "../../systems/WordSpawner";
 import { Label } from "../../ui/Label";
+import { ProgressBar } from "../../ui/ProgressBar";
 import { TypingTextDisplay } from "../../ui/TypingTextDisplay";
 import { GameOverScreen } from "../gameover/GameOverScreen";
 import { LevelIntroScreen } from "../levels/LevelIntroScreen";
@@ -41,6 +42,7 @@ export class MainScreen extends Container {
   private livesDisplay!: Label;
   private levelDisplay!: Label;
   private progressDisplay!: Label;
+  private progressBar!: ProgressBar;
 
   // Level 3 components
   private typingTextDisplay!: TypingTextDisplay;
@@ -52,6 +54,8 @@ export class MainScreen extends Container {
   private lives: number = 3;
   private currentInput: string = "";
   private wrongCharHighlight: boolean = false;
+  private completedMessages: number = 0;
+  private totalMessagesInLevel: number = 0;
 
   constructor() {
     super();
@@ -186,6 +190,10 @@ export class MainScreen extends Container {
     });
     this.progressDisplay.y = 170;
     this.addChild(this.progressDisplay);
+
+    // Progress bar
+    this.progressBar = new ProgressBar();
+    this.addChild(this.progressBar);
 
     // Level 3 typing text display
     this.typingTextDisplay = new TypingTextDisplay();
@@ -417,6 +425,9 @@ export class MainScreen extends Container {
     this.score += word.targetText.length * 10;
     this.updateScoreDisplay();
 
+    // Track completed messages for progress
+    this.completedMessages++;
+
     // Clear input and deactivate word
     this.clearInput();
   }
@@ -453,6 +464,37 @@ export class MainScreen extends Container {
   private updateProgressDisplay(): void {
     const progress = GameState.getLevelProgress();
     this.progressDisplay.text = `Progress: ${Math.round(progress)}%`;
+
+    // Update progress bar based on current level
+    const currentLevel = GameState.getCurrentLevel();
+
+    if (currentLevel === 3) {
+      // Level 3: Use typing progress with word count
+      const typingProgress = this.typingTextDisplay.getProgress();
+      const typedText = this.typingTextDisplay.getTypedText();
+      const fullText = this.typingTextDisplay.getFullText();
+
+      // Count words by splitting on spaces
+      const typedWords = typedText.trim()
+        ? typedText.trim().split(/\s+/).length
+        : 0;
+      const totalWords = fullText.trim().split(/\s+/).length;
+
+      this.progressBar.updateProgressWithTypingProgress(
+        typingProgress,
+        typedWords,
+        totalWords,
+      );
+    } else {
+      // Levels 1-2: Use completed messages (not remaining)
+      const remainingMessages =
+        this.totalMessagesInLevel - this.completedMessages;
+      this.progressBar.updateProgress(
+        currentLevel,
+        remainingMessages,
+        this.totalMessagesInLevel,
+      );
+    }
   }
 
   /** Game over */
@@ -516,11 +558,18 @@ export class MainScreen extends Container {
     this.wordSpawner.resetForLevel();
     this.player.clearBullets();
 
+    // Reset progress tracking
+    this.completedMessages = 0;
+    this.totalMessagesInLevel = 0;
+
     // Reset level 3 components
     this.typingTextDisplay.reset();
     this.boss.reset();
     this.boss.visible = false;
     this.currentBossText = "";
+
+    // Reset progress bar
+    this.progressBar.reset();
 
     this.updateScoreDisplay();
     this.updateLivesDisplay();
@@ -560,6 +609,9 @@ export class MainScreen extends Container {
 
     // Resize level 3 components
     this.typingTextDisplay.resize(width, height);
+
+    // Resize progress bar
+    this.progressBar.resize(width, height);
   }
 
   /** Show screen with animations */
@@ -584,6 +636,9 @@ export class MainScreen extends Container {
     }
 
     await finalPromise;
+
+    // Show progress bar with animation
+    this.progressBar.show();
 
     // Setup level-specific components
     this.setupLevelComponents();
@@ -624,6 +679,10 @@ export class MainScreen extends Container {
       // Update input display for level 3
       this.updateLevel3InputDisplay();
     } else {
+      // Reset progress tracking for levels 1-2
+      this.completedMessages = 0;
+      this.totalMessagesInLevel = this.wordSpawner.getTotalMessageCount();
+
       // Hide typing text display and boss for levels 1-2
       this.typingTextDisplay.visible = false;
       this.boss.visible = false;
@@ -646,16 +705,15 @@ export class MainScreen extends Container {
 
         // Mark word as completed to prevent multiple hits
         word.isCompleted = true;
-
-        console.log(
-          `Player word "${word.targetText}" hit boss for ${word.targetText.length * 2} damage`,
-        );
       }
     }
   }
 
   /** Hide screen with animations */
-  public async hide() {}
+  public async hide() {
+    // Hide progress bar
+    this.progressBar.hide();
+  }
 
   /** Auto pause the app when window go out of focus */
   public blur() {

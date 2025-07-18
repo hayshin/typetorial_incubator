@@ -238,4 +238,11 @@ export class TypingTextDisplay extends Container {
   public getTypedText(): string {
     return this.typedText;
   }
+
+  /**
+   * Get full text
+   */
+  public getFullText(): string {
+    return this.fullText;
+  }
 }

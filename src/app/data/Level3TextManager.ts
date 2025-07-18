@@ -6,7 +6,6 @@ import level3Texts from "./level3-texts.json";
 
 export interface Level3Text {
   text: string;
-  difficulty: "easy" | "medium" | "hard";
 }
 
 export class Level3TextManager {
@@ -23,40 +22,10 @@ export class Level3TextManager {
   }
 
   /**
-   * Get a random text by difficulty
-   */
-  public static getRandomTextByDifficulty(
-    difficulty: "easy" | "medium" | "hard",
-  ): Level3Text {
-    const filteredTexts = Level3TextManager.texts.filter(
-      (text) => text.difficulty === difficulty,
-    );
-
-    if (filteredTexts.length === 0) {
-      // Fallback to any text if no texts for this difficulty
-      return Level3TextManager.getRandomText();
-    }
-
-    const randomIndex = Math.floor(Math.random() * filteredTexts.length);
-    return filteredTexts[randomIndex];
-  }
-
-  /**
    * Get all texts
    */
   public static getAllTexts(): Level3Text[] {
     return [...Level3TextManager.texts];
-  }
-
-  /**
-   * Get texts by difficulty
-   */
-  public static getTextsByDifficulty(
-    difficulty: "easy" | "medium" | "hard",
-  ): Level3Text[] {
-    return Level3TextManager.texts.filter(
-      (text) => text.difficulty === difficulty,
-    );
   }
 
   /**
@@ -80,16 +49,5 @@ export class Level3TextManager {
    */
   public static getTextCount(): number {
     return Level3TextManager.texts.length;
-  }
-
-  /**
-   * Get text count by difficulty
-   */
-  public static getTextCountByDifficulty(
-    difficulty: "easy" | "medium" | "hard",
-  ): number {
-    return Level3TextManager.texts.filter(
-      (text) => text.difficulty === difficulty,
-    ).length;
   }
 }

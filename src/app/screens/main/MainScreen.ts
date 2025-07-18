@@ -443,6 +443,10 @@ export class MainScreen extends Container {
     this.wordSpawner.stopSpawning();
     this.inputManager.setEnabled(false);
 
+    // Mark current level as completed in progress bar
+    const currentLevel = GameState.getCurrentLevel();
+    this.progressBar.completeLevelProgress(currentLevel);
+
     // Clear current input and reset state for new level
     this.clearInput();
 
@@ -570,8 +574,10 @@ export class MainScreen extends Container {
     this.boss.visible = false;
     this.currentBossText = "";
 
-    // Reset progress bar
-    this.progressBar.reset();
+    // Reset progress bar only for full game reset, not during level transitions
+    if (!GameState.isTransitioning()) {
+      this.progressBar.reset();
+    }
 
     this.updateScoreDisplay();
     this.updateLivesDisplay();
@@ -696,6 +702,9 @@ export class MainScreen extends Container {
       this.typingTextDisplay.visible = false;
       this.boss.visible = false;
     }
+
+    // Reset progress only for current level, keeping previous levels completed
+    this.progressBar.resetLevel(currentLevel);
   }
 
   /** Check collisions between player messages and boss */

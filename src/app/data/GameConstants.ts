@@ -80,7 +80,7 @@ export class GameConstants {
   public static readonly PLAYER_LIVES = 3;
 
   // Game configuration
-  public static readonly DEFAULT_LEVEL: 1 | 2 | 3 = 3;
+  public static readonly DEFAULT_LEVEL: 1 | 2 | 3 = 1;
 
   // Typing settings
   public static readonly TYPING_TYPED_COLOR = 0x888888;

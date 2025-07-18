@@ -382,6 +382,9 @@ export class MainScreen extends Container {
 
     // Start cursor blinking animation
     this.startCursorBlink();
+
+    // Hide input display
+    this.inputDisplay.visible = false;
   }
 
   /** Start cursor blinking animation */

@@ -30,6 +30,8 @@ export class TypingTextDisplay extends Container {
   constructor() {
     super();
 
+    console.log("TypingTextDisplay - constructor called");
+
     // Create background graphics
     this.background = new Graphics();
     this.addChild(this.background);
@@ -56,6 +58,7 @@ export class TypingTextDisplay extends Container {
    * Set the text to be typed
    */
   public setText(text: string): void {
+    console.log("TypingTextDisplay - setText called with:", text);
     this.fullText = text;
     this.typedText = "";
     this.hasWrongCharacter = false;
@@ -167,6 +170,10 @@ export class TypingTextDisplay extends Container {
    * Update the visual display
    */
   private updateDisplay(): void {
+    console.log(
+      "TypingTextDisplay - updateDisplay called, fullText:",
+      this.fullText,
+    );
     if (this.fullText.length === 0) {
       this.textDisplay.text = "";
       this.updateBackground();
@@ -200,6 +207,7 @@ export class TypingTextDisplay extends Container {
     }
 
     this.textDisplay.text = htmlText;
+    console.log("TypingTextDisplay - text set to:", htmlText);
     this.updateBackground();
   }
 
@@ -207,9 +215,11 @@ export class TypingTextDisplay extends Container {
    * Update the background graphics
    */
   private updateBackground(): void {
+    console.log("TypingTextDisplay - updateBackground called");
     this.background.clear();
 
     if (this.fullText.length === 0) {
+      console.log("TypingTextDisplay - no text, skipping background");
       return;
     }
 
@@ -236,6 +246,13 @@ export class TypingTextDisplay extends Container {
     this.background
       .roundRect(-bubbleWidth / 2, -bubbleHeight / 2, 3, bubbleHeight, 12)
       .fill({ color: 0xffff00 });
+
+    console.log(
+      "TypingTextDisplay - background created with dimensions:",
+      bubbleWidth,
+      "x",
+      bubbleHeight,
+    );
   }
 
   /**
@@ -254,8 +271,13 @@ export class TypingTextDisplay extends Container {
    * Position the display
    */
   public resize(width: number, height: number): void {
-    this.x = width / 2; // Center horizontally
-    this.y = height - 100; // Position near bottom with some margin
+    this.x = 0; // Center horizontally relative to mainContainer
+    this.y = height / 2 - 100; // Position near bottom relative to mainContainer center
+    console.log(
+      "TypingTextDisplay - resized and positioned at:",
+      this.x,
+      this.y,
+    );
   }
 
   /**

@@ -635,10 +635,23 @@ export class MainScreen extends Container {
   /** Setup components specific to current level */
   private setupLevelComponents(): void {
     const currentLevel = GameState.getCurrentLevel();
+    console.log(
+      "MainScreen - setupLevelComponents called, level:",
+      currentLevel,
+    );
+    console.log(
+      "MainScreen - typingTextDisplay exists:",
+      !!this.typingTextDisplay,
+    );
 
     if (currentLevel === 3) {
       // Show typing text display for level 3
+      console.log("MainScreen - Setting typingTextDisplay visible to true");
       this.typingTextDisplay.visible = true;
+      console.log(
+        "MainScreen - typingTextDisplay.visible:",
+        this.typingTextDisplay.visible,
+      );
 
       // Show and setup boss
       this.boss.visible = true;
@@ -646,7 +659,20 @@ export class MainScreen extends Container {
       // Get random boss text and set it
       const bossText = Level3TextManager.getRandomText();
       this.currentBossText = bossText.text;
+      console.log(
+        "MainScreen - Setting text to typingTextDisplay:",
+        this.currentBossText,
+      );
       this.typingTextDisplay.setText(this.currentBossText);
+      console.log(
+        "MainScreen - typingTextDisplay position:",
+        this.typingTextDisplay.x,
+        this.typingTextDisplay.y,
+      );
+      console.log(
+        "MainScreen - typingTextDisplay bounds:",
+        this.typingTextDisplay.getBounds(),
+      );
 
       // Set boss health based on text length
       const bossHealth = Level3TextManager.calculateBossHealth(

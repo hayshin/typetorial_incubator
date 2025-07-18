@@ -184,7 +184,7 @@ export class Boss extends Container {
     this.bossSprite.alpha = 0;
     this.bossSprite.scale.set(1.5, 1.5);
     this.y += 100;
-    
+
     setTimeout(() => {
       if (this.onDefeated) {
         this.onDefeated();

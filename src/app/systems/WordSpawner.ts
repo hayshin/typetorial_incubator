@@ -145,7 +145,9 @@ export class WordSpawner {
     this.container.addChild(word);
 
     // Play discord notification sound when word spawns
-    engine().audio.sfx.play("main/sounds/discord-notification-sound.mp3", { volume: 0.3 });
+    engine().audio.sfx.play("main/sounds/discord-notification-sound.mp3", {
+      volume: 0.3,
+    });
   }
 
   /**

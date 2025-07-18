@@ -44,6 +44,7 @@ export class MainScreen extends Container {
 
   // UI elements
   private progressBar!: ProgressBar;
+  private backgroundOverlay!: Graphics; // Dark tint overlay
 
   // Level 3 components
   private typingTextDisplay!: TypingTextDisplay;
@@ -75,6 +76,12 @@ export class MainScreen extends Container {
     this.backgroundSprite.filters = [blurFilter];
 
     this.addChild(this.backgroundSprite);
+
+    // Create dark tint overlay
+    this.backgroundOverlay = new Graphics()
+      .rect(0, 0, 1, 1) // Will be resized in resize method
+      .fill({ color: 0x000000, alpha: 0.5  }); // Dark tint with 30% opacity
+    this.addChild(this.backgroundOverlay);
 
     this.mainContainer = new Container();
     this.addChild(this.mainContainer);
@@ -601,6 +608,13 @@ export class MainScreen extends Container {
     this.backgroundSprite.y = centerY;
     this.backgroundSprite.width = width;
     this.backgroundSprite.height = height;
+
+    // Resize and position dark tint overlay
+    this.backgroundOverlay.clear()
+      .rect(0, 0, width, height)
+      .fill({ color: 0x000000, alpha: 0.5 });
+    this.backgroundOverlay.x = 0;
+    this.backgroundOverlay.y = 0;
 
     this.mainContainer.x = centerX;
     this.mainContainer.y = centerY;

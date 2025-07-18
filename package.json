@@ -7,7 +7,7 @@
   "scripts": {
     "start": "npm run dev",
     "build": "tsc && vite build",
-    "build:lint": "npm run lint && tsc && vite build",
+    "build:quick": "bun run vite build",
     "lint": "eslint .",
     "dev": "vite",
 

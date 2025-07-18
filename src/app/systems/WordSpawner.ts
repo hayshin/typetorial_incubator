@@ -476,7 +476,7 @@ export class WordSpawner {
       // For testing: only use the first 2 messages from shuffled array
 
       // this.remainingMessages = shuffledMessages;
-      this.remainingMessages = shuffledMessages.slice(0, 20);
+      this.remainingMessages = shuffledMessages.slice(0, 13);
       this.totalMessages = this.remainingMessages.length;
 
       console.log(

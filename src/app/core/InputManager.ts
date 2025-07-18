@@ -12,6 +12,9 @@ export class InputManager {
   /** Callback for when escape is pressed */
   public onEscape?: () => void;
 
+  /** Callback for when backspace is pressed */
+  public onBackspace?: () => void;
+
   /** Whether input is currently enabled */
   private isEnabled: boolean = true;
 
@@ -57,6 +60,13 @@ export class InputManager {
       return;
     }
 
+    if (key === "backspace") {
+      if (this.onBackspace) {
+        this.onBackspace();
+      }
+      return;
+    }
+
     // Handle character input
     if (this.isValidCharacter(key)) {
       if (this.onCharacterTyped) {
@@ -77,7 +87,7 @@ export class InputManager {
    * Check if key should be handled by the game
    */
   private isGameKey(key: string): boolean {
-    return this.isValidCharacter(key) || key === "Enter" || key === "Escape";
+    return this.isValidCharacter(key) || key === "Enter" || key === "Escape" || key === "Backspace";
   }
 
   /**

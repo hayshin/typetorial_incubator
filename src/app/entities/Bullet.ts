@@ -29,9 +29,10 @@ export class Bullet extends Container {
   /** Bullet size */
   private bulletSize: number = GameConstants.BULLET_SIZE;
 
-  /** Trail effect for visual appeal */
-  private trailPoints: Array<{ x: number; y: number; alpha: number }> = [];
-  private maxTrailLength: number = 8;
+  /** Color cycling for bullet */
+  private colorIndex: number = 0;
+  private colorChangeTimer: number = 0;
+  private readonly COLOR_CHANGE_INTERVAL: number = 0.2; // Change color every 0.2 seconds
 
   constructor() {
     super();
@@ -45,15 +46,16 @@ export class Bullet extends Container {
   private createBulletGraphics(): void {
     this.bulletGraphics = new Graphics();
 
-    // Draw bullet as a small circle
+    // Draw bullet as a green square like GitHub contributions
+    const squareSize = this.bulletSize * 2;
     this.bulletGraphics
-      .circle(0, 0, this.bulletSize)
-      .fill(GameConstants.BULLET_COLOR);
+      .rect(-squareSize / 2, -squareSize / 2, squareSize, squareSize)
+      .fill(0x00ff00); // Initial green color
 
-    // Add glow effect
+    // Add subtle border
     this.bulletGraphics
-      .circle(0, 0, this.bulletSize * 1.5)
-      .fill({ color: GameConstants.BULLET_COLOR, alpha: 0.3 });
+      .rect(-squareSize / 2, -squareSize / 2, squareSize, squareSize)
+      .stroke({ color: 0x00cc00, width: 1 });
 
     this.addChild(this.bulletGraphics);
 
@@ -93,13 +95,13 @@ export class Bullet extends Container {
   }
 
   /**
-   * Update bullet position and trail
+   * Update bullet position and color
    */
   public update(deltaTime: number): void {
     if (this.shouldBeDestroyed) return;
 
-    // Update trail
-    this.updateTrail();
+    // Update color cycling
+    this.updateColor(deltaTime);
 
     // Move bullet
     this.x += this.velocityX * deltaTime;
@@ -121,58 +123,37 @@ export class Bullet extends Container {
   }
 
   /**
-   * Update bullet trail effect
+   * Update bullet color cycling
    */
-  private updateTrail(): void {
-    // Add current position to trail
-    this.trailPoints.unshift({ x: this.x, y: this.y, alpha: 1.0 });
-
-    // Limit trail length
-    if (this.trailPoints.length > this.maxTrailLength) {
-      this.trailPoints.pop();
-    }
-
-    // Update trail alpha values
-    this.trailPoints.forEach((point, index) => {
-      point.alpha = 1.0 - index / this.maxTrailLength;
-    });
-  }
-
-  /**
-   * Draw trail effect
-   */
-  private drawTrail(): void {
-    if (this.trailPoints.length < 2) return;
-
-    const trailGraphics = new Graphics();
-
-    for (let i = 0; i < this.trailPoints.length - 1; i++) {
-      const point = this.trailPoints[i];
-      const nextPoint = this.trailPoints[i + 1];
-
-      const size = (this.bulletSize * point.alpha) / 2;
-
-      trailGraphics
-        .moveTo(point.x, point.y)
-        .lineTo(nextPoint.x, nextPoint.y)
-        .stroke({
-          color: GameConstants.BULLET_COLOR,
-          alpha: point.alpha * 0.5,
-          width: size,
-        });
-    }
-
-    // Add trail to parent container if exists
-    if (this.parent) {
-      this.parent.addChildAt(trailGraphics, 0);
-
-      // Remove trail after a short time
-      setTimeout(() => {
-        if (trailGraphics.parent) {
-          trailGraphics.parent.removeChild(trailGraphics);
-        }
-        trailGraphics.destroy();
-      }, 100);
+  private updateColor(deltaTime: number): void {
+    this.colorChangeTimer += deltaTime;
+    
+    if (this.colorChangeTimer >= this.COLOR_CHANGE_INTERVAL) {
+      this.colorChangeTimer = 0;
+      this.colorIndex = (this.colorIndex + 1) % 5; // Cycle through 5 colors
+      
+      // GitHub contribution green shades
+      const greenShades = [
+        0x0a4620, // Darkest green
+        0x006d32, // Dark green
+        0x0e8a16, // Medium green
+        0x26a641, // Light green
+        0x39d353, // Lightest green
+      ];
+      
+      const newColor = greenShades[this.colorIndex];
+      
+      // Update bullet color
+      this.bulletGraphics.clear();
+      const squareSize = this.bulletSize * 2;
+      this.bulletGraphics
+        .rect(-squareSize / 2, -squareSize / 2, squareSize, squareSize)
+        .fill(newColor);
+      
+      // Add subtle border
+      this.bulletGraphics
+        .rect(-squareSize / 2, -squareSize / 2, squareSize, squareSize)
+        .stroke({ color: newColor, alpha: 0.8, width: 1 });
     }
   }
 
@@ -215,9 +196,6 @@ export class Bullet extends Container {
 
     // Fade out effect
     animate(this.alpha, 0, { duration: 0.2 });
-
-    // Draw trail one last time for effect
-    this.drawTrail();
   }
 
   /**

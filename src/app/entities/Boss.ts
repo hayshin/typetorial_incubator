@@ -42,11 +42,10 @@ export class Boss extends Container {
   constructor() {
     super();
 
-    // Create boss sprite (placeholder for now)
-    this.bossSprite = new Sprite(Texture.WHITE);
-    this.bossSprite.width = 80;
-    this.bossSprite.height = 120;
-    this.bossSprite.tint = GameConstants.COLORS.MONSTER;
+    // Create boss sprite using arman mentor image
+    this.bossSprite = new Sprite(Texture.from("main/mentors/arman/0.png"));
+    this.bossSprite.width = 600;
+    this.bossSprite.height = 360;
     this.bossSprite.anchor.set(0.5, 1); // Bottom center
     this.addChild(this.bossSprite);
 
@@ -81,7 +80,7 @@ export class Boss extends Container {
 
     // Position boss on right side
     this.x = GameConstants.MONSTER_X;
-    this.y = 0;
+    this.y = 300;
 
     this.updateHealthBar();
   }
@@ -156,19 +155,15 @@ export class Boss extends Container {
     const originalTint = this.bossSprite.tint;
     this.bossSprite.tint = 0xff0000;
 
-    // Shake animation
+    // Simple shake animation with timeouts
     const originalX = this.x;
-    animate(this, { x: originalX + 10 } as ObjectTarget<Boss>, {
-      duration: 0.05,
-    }).then(() => {
-      animate(this, { x: originalX - 10 } as ObjectTarget<Boss>, {
-        duration: 0.05,
-      }).then(() => {
-        animate(this, { x: originalX } as ObjectTarget<Boss>, {
-          duration: 0.05,
-        });
-      });
-    });
+    this.x = originalX + 10;
+    setTimeout(() => {
+      this.x = originalX - 10;
+      setTimeout(() => {
+        this.x = originalX;
+      }, 50);
+    }, 50);
 
     // Restore original tint
     setTimeout(() => {
@@ -186,20 +181,15 @@ export class Boss extends Container {
     console.log("Boss defeated!");
 
     // Play defeat animation
-    animate(
-      this.bossSprite,
-      { alpha: 0, scale: { x: 1.5, y: 1.5 } } as ObjectTarget<Sprite>,
-      { duration: 1, ease: "easeOut" },
-    );
-
-    animate(this, { y: this.y + 100 } as ObjectTarget<Boss>, {
-      duration: 1,
-      ease: "easeIn",
-    }).then(() => {
+    this.bossSprite.alpha = 0;
+    this.bossSprite.scale.set(1.5, 1.5);
+    this.y += 100;
+    
+    setTimeout(() => {
       if (this.onDefeated) {
         this.onDefeated();
       }
-    });
+    }, 1000);
   }
 
   /**
@@ -209,23 +199,19 @@ export class Boss extends Container {
     // Start from right edge, outside screen
     const originalX = this.x;
     this.x = originalX + 200;
-    this.alpha = 0;
+    this.alpha = 1000;
 
-    // Animate entrance
-    await animate(this, { alpha: 1, x: originalX } as ObjectTarget<Boss>, {
-      duration: 1,
-      ease: "backOut",
-    });
+    // Simple entrance animation
+    this.alpha = 1;
+    this.x = originalX;
   }
 
   /**
    * Hide boss with exit animation
    */
   public async hide(): Promise<void> {
-    await animate(this, { alpha: 0, x: this.x + 200 } as ObjectTarget<Boss>, {
-      duration: 0.5,
-      ease: "easeIn",
-    });
+    this.alpha = 0;
+    this.x += 200;
   }
 
   /**
@@ -261,7 +247,7 @@ export class Boss extends Container {
     this.bossSprite.scale.set(1);
     this.bossSprite.tint = GameConstants.COLORS.MONSTER;
     this.x = GameConstants.MONSTER_X;
-    this.y = 0;
+    this.y = 500;
     this.updateHealthBar();
   }
 

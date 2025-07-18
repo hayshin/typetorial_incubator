@@ -90,9 +90,9 @@ export class MainScreen extends Container {
   /** Ensure player is properly positioned on the left side */
   private ensurePlayerPosition(): void {
     // Make sure player is visible and on the left side
-    const leftMargin = 10; // Distance from left edge
+    const leftMargin = 50; // Distance from left edge
     this.player.x = -GameConstants.GAME_WIDTH / 2 + leftMargin;
-    this.player.y = 400; // Center vertically
+    this.player.y = 400; // Center vertically relative to screen
   }
 
   /** Initialize UI elements */

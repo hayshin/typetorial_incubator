@@ -1,8 +1,11 @@
-import { animate } from "motion";
-import type { ObjectTarget } from "motion/react";
 import { Container, Graphics, Sprite, Texture } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
+import {
+  MessageDictionary,
+  type MessageEntry,
+} from "../data/MessageDictionary";
 import { Label } from "../ui/Label";
+import { MessageBubble } from "../ui/MessageBubble";
 
 /**
  * Boss entity for level 3
@@ -38,6 +41,30 @@ export class Boss extends Container {
 
   /** Callback when boss is defeated */
   public onDefeated?: () => void;
+
+  /** Boss messages for level 3 */
+  private bossMessages: MessageEntry[] = [];
+
+  /** Message spawn timer in seconds */
+  private messageSpawnTimer: number = 0;
+
+  /** Message spawn interval (8 seconds) */
+  private readonly MESSAGE_SPAWN_INTERVAL = 20;
+
+  /** Whether boss should spawn messages */
+  private shouldSpawnMessages: boolean = false;
+
+  /** Callback to spawn boss message word */
+  public onSpawnBossMessage?: (text: string) => void;
+
+  /** Message bubble for boss speech */
+  private messageBubble: MessageBubble | null = null;
+
+  /** Whether boss is currently speaking */
+  private isSpeaking: boolean = false;
+
+  /** Current message timeout */
+  private messageTimeout: number | null = null;
 
   constructor() {
     super();
@@ -83,6 +110,7 @@ export class Boss extends Container {
     this.y = 300;
 
     this.updateHealthBar();
+    this.initializeBossMessages();
   }
 
   /**
@@ -114,6 +142,11 @@ export class Boss extends Container {
     // Check if defeated
     if (this.currentHealth <= 0) {
       this.defeat();
+    } else {
+      // Sometimes say a threat when taking damage (20% chance)
+      if (Math.random() < 0.2) {
+        this.sayRandomThreat();
+      }
     }
   }
 
@@ -248,14 +281,207 @@ export class Boss extends Container {
     this.bossSprite.tint = GameConstants.COLORS.MONSTER;
     this.x = GameConstants.MONSTER_X;
     this.y = 500;
+    this.hideMessage(); // Clear any messages
+    this.stopSpawningMessages(); // Stop message spawning
     this.updateHealthBar();
   }
 
   /**
    * Update boss (called every frame)
    */
-  public update(_deltaTime: number): void {
-    // Boss doesn't need frame updates currently
-    // Can add idle animations or other behaviors here
+  public update(deltaTime: number): void {
+    // Update message spawning timer
+    if (this.shouldSpawnMessages && !this.isDefeated) {
+      this.messageSpawnTimer += deltaTime;
+
+      // Spawn message every 15 seconds
+      if (this.messageSpawnTimer >= this.MESSAGE_SPAWN_INTERVAL) {
+        this.spawnBossMessage();
+        this.messageSpawnTimer = 0;
+      }
+    }
+  }
+
+  /**
+   * Show a message from the boss
+   */
+  public showMessage(message: string, duration: number = 3000): void {
+    // Clear any existing message
+    this.hideMessage();
+
+    // Create new message bubble
+    this.messageBubble = new MessageBubble("арман", message, {
+      maxWidth: 400,
+      messageSize: 22,
+      level: 3,
+      backgroundColor: 0x4a0e0e, // Dark red background for boss
+      leftStrokeColor: 0xff0000, // Red stroke
+      leftStrokeWidth: 5,
+      cornerRadius: 15,
+      senderNameColor: 0xffaaaa, // Light red text
+      messageColor: 0xffffff, // White message text
+    });
+
+    // Position message bubble above boss
+    this.messageBubble.x = -this.messageBubble.bubbleWidth / 2;
+    this.messageBubble.y = -200; // Above health bar
+    this.addChild(this.messageBubble);
+
+    this.isSpeaking = true;
+
+    // Auto-hide after duration
+    if (duration > 0) {
+      this.messageTimeout = window.setTimeout(() => {
+        this.hideMessage();
+      }, duration);
+    }
+
+    console.log(`Boss says: "${message}"`);
+  }
+
+  /**
+   * Hide the current message
+   */
+  public hideMessage(): void {
+    if (this.messageBubble) {
+      this.removeChild(this.messageBubble);
+      this.messageBubble = null;
+    }
+
+    if (this.messageTimeout) {
+      clearTimeout(this.messageTimeout);
+      this.messageTimeout = null;
+    }
+
+    this.isSpeaking = false;
+  }
+
+  /**
+   * Check if boss is currently speaking
+   */
+  public isCurrentlySpeaking(): boolean {
+    return this.isSpeaking;
+  }
+
+  /**
+   * Get word spawn position for boss messages
+   */
+  public getWordSpawnPosition(): { x: number; y: number } {
+    return {
+      x: this.x - 100,
+      y: this.y - 50,
+    };
+  }
+
+  /**
+   * Say a random threatening message when taking damage
+   */
+  public sayRandomThreat(): void {
+    const threats = [
+      "Это все, на что ты способен?",
+      "Твои слова слишком слабы!",
+      "Я покажу тебе настоящую силу!",
+      "Ты не сможешь меня победить!",
+      "Моя мощь безгранична!",
+      "Твоя попытка жалка!",
+      "Я непобедим!",
+    ];
+
+    const randomThreat = threats[Math.floor(Math.random() * threats.length)];
+    this.showMessage(randomThreat, 2000);
+  }
+
+  /**
+   * Say encouraging words when boss is defeated
+   */
+  public sayDefeatMessage(): void {
+    const defeatMessages = [
+      "Невозможно... Как ты это сделал?",
+      "Твоя сила слов впечатляет...",
+      "Ты действительно достоин победы.",
+      "Это был достойный бой!",
+      "Ты превзошел мои ожидания...",
+    ];
+
+    const randomMessage =
+      defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
+    this.showMessage(randomMessage, 4000);
+  }
+
+  /**
+   * Say greeting message when boss appears
+   */
+  public sayGreeting(): void {
+    const greetings = [
+      "Добро пожаловать на финальный уровень!",
+      "Готов ли ты к настоящему испытанию?",
+      "Покажи мне силу своих слов!",
+      "Время проверить твои навыки!",
+    ];
+
+    const randomGreeting =
+      greetings[Math.floor(Math.random() * greetings.length)];
+    this.showMessage(randomGreeting, 3000);
+  }
+
+  /**
+   * Initialize boss messages from dictionary
+   */
+  private initializeBossMessages(): void {
+    // Get all messages for level 3 by "арман" author
+    this.bossMessages = MessageDictionary.getMessagesByLevel(3).filter(
+      (msg) => msg.author === "арман",
+    );
+
+    console.log(
+      "Boss - initialized with messages:",
+      this.bossMessages.map((m) => m.text),
+    );
+  }
+
+  /**
+   * Start spawning boss messages
+   */
+  public startSpawningMessages(): void {
+    this.shouldSpawnMessages = true;
+    this.messageSpawnTimer = 0;
+    console.log("Boss - started spawning messages");
+  }
+
+  /**
+   * Stop spawning boss messages
+   */
+  public stopSpawningMessages(): void {
+    this.shouldSpawnMessages = false;
+    this.messageSpawnTimer = 0;
+    console.log("Boss - stopped spawning messages");
+  }
+
+  /**
+   * Spawn a boss message word that moves towards player
+   */
+  private spawnBossMessage(): void {
+    if (this.bossMessages.length === 0) {
+      console.log("Boss - no messages available to spawn");
+      return;
+    }
+
+    // Get random message from boss messages
+    const randomIndex = Math.floor(Math.random() * this.bossMessages.length);
+    const message = this.bossMessages[randomIndex];
+
+    console.log("Boss - spawning attack message:", message.text);
+
+    // Spawn the message as a word that player must type to defend
+    if (this.onSpawnBossMessage) {
+      this.onSpawnBossMessage(message.text);
+    }
+  }
+
+  /**
+   * Reset message spawning timer
+   */
+  public resetMessageTimer(): void {
+    this.messageSpawnTimer = 0;
   }
 }

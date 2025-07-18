@@ -711,6 +711,16 @@ export class MainScreen extends Container {
 
       // Show boss with animation
       this.boss.show();
+
+      // Setup boss message spawning
+      this.boss.onSpawnBossMessage = (text: string) => {
+        this.wordSpawner.spawnBossMessage(text);
+      };
+
+      // Start boss message spawning after a short delay
+      setTimeout(() => {
+        this.boss.startSpawningMessages();
+      }, 3000); // 3 second delay before first message
     } else {
       // Reset progress tracking for levels 1-2
       this.completedMessages = 0;
@@ -719,6 +729,9 @@ export class MainScreen extends Container {
       // Hide typing text display and boss for levels 1-2
       this.typingTextDisplay.visible = false;
       this.boss.visible = false;
+
+      // Stop boss message spawning for other levels
+      this.boss.stopSpawningMessages();
     }
 
     // Reset progress only for current level, keeping previous levels completed

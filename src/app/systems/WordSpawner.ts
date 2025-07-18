@@ -207,6 +207,39 @@ export class WordSpawner {
   }
 
   /**
+   * Spawn a boss message (level 3) - goes from right to left like normal words
+   */
+  public spawnBossMessage(text: string): Word {
+    const speed = this.getSpeedForDifficulty();
+    const word = new Word(text, speed, "арман");
+
+    // Set spawn position from right side (same as normal words)
+    word.x = GameConstants.WORD_SPAWN_X;
+    word.y = this.getRandomSpawnY();
+
+    // Normal direction for boss messages (go left, same as normal words)
+    // No need to call setDirection, default is left
+
+    console.log(
+      "WordSpawner - spawning boss message:",
+      text,
+      "at:",
+      word.x,
+      word.y,
+    );
+
+    this.activeWords.push(word);
+    this.container.addChild(word);
+
+    // Play discord notification sound when boss message spawns
+    engine().audio.sfx.play("main/sounds/discord-notification-sound.mp3", {
+      volume: 0.3,
+    });
+
+    return word;
+  }
+
+  /**
    * Get random Y position for spawning
    */
   private getRandomSpawnY(): number {
@@ -442,8 +475,8 @@ export class WordSpawner {
 
       // For testing: only use the first 2 messages from shuffled array
 
-      this.remainingMessages = shuffledMessages;
-      // this.remainingMessages = shuffledMessages.slice(0, 2);
+      // this.remainingMessages = shuffledMessages;
+      this.remainingMessages = shuffledMessages.slice(0, 20);
       this.totalMessages = this.remainingMessages.length;
 
       console.log(

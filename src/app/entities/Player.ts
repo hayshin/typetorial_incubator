@@ -56,13 +56,13 @@ export class Player extends Container {
   private createPlayerGraphics(): void {
     // Create default state sprite
     this.playerDefaultSprite = new Sprite(Texture.from("main/player/0.PNG"));
-    this.playerDefaultSprite.anchor.set(0.5);
+    this.playerDefaultSprite.anchor.set(0.5, 1);
     this.playerDefaultSprite.width = this.playerSize;
     this.playerDefaultSprite.height = this.playerSize;
 
     // Create keyboard state sprite
     this.playerKeyboardSprite = new Sprite(Texture.from("main/player/1.PNG"));
-    this.playerKeyboardSprite.anchor.set(0.5);
+    this.playerKeyboardSprite.anchor.set(0.5, 0.5);
     this.playerKeyboardSprite.width = this.playerSize;
     this.playerKeyboardSprite.height = this.playerSize;
     this.playerKeyboardSprite.visible = false;

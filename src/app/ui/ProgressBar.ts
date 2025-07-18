@@ -164,7 +164,16 @@ export class ProgressBar extends Container {
    * Mark a level as completed
    */
   public completeLevelProgress(level: 1 | 2 | 3): void {
+    console.log(
+      `ProgressBar - completeLevelProgress called for level ${level}`,
+    );
+    console.log(`ProgressBar - Progress before completion:`, [
+      ...this.levelProgress,
+    ]);
     this.setLevelProgress(level, 1.0);
+    console.log(`ProgressBar - Progress after completion:`, [
+      ...this.levelProgress,
+    ]);
   }
 
   /**
@@ -263,7 +272,12 @@ export class ProgressBar extends Container {
    * Reset progress for a specific level
    */
   public resetLevel(level: 1 | 2 | 3): void {
+    console.log(`ProgressBar - resetLevel called for level ${level}`);
+    console.log(`ProgressBar - Progress before reset:`, [
+      ...this.levelProgress,
+    ]);
     this.levelProgress[level - 1] = 0;
+    console.log(`ProgressBar - Progress after reset:`, [...this.levelProgress]);
     this.updateIncrementVisualsFromLevelProgress();
   }
 

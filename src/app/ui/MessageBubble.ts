@@ -15,7 +15,7 @@ const defaultMessageBubbleOptions = {
   messageSize: 24,
   profileSize: 28,
   level: 1, // Current game level
-  author: "Mentor", // Message author
+  author: "игрок", // Message author
 };
 
 export type MessageBubbleOptions = typeof defaultMessageBubbleOptions;
@@ -28,6 +28,7 @@ const MENTOR_PROFILES: Record<string, string> = {
   асель: "main/mentors/3.JPG",
   бахр: "main/mentors/4.JPG",
   баха: "main/mentors/5.JPG",
+  игрок: "nfac_logo.svg",
 };
 
 /**

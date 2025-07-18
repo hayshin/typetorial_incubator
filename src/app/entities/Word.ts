@@ -55,15 +55,11 @@ export class Word extends Container {
     this.velocityY = this.speed * Math.sin(angle);
 
     // Create message bubble with sender name and word as message
-    this.messageBubble = new MessageBubble(
-      author || "Mentor",
-      this.targetText,
-      {
-        maxWidth: GameConstants.MESSAGE_MAX_WIDTH,
-        messageSize: 20,
-        senderNameSize: 20,
-      },
-    );
+    this.messageBubble = new MessageBubble(author || "игрок", this.targetText, {
+      maxWidth: GameConstants.MESSAGE_MAX_WIDTH,
+      messageSize: 20,
+      senderNameSize: 20,
+    });
 
     // Center the bubble by positioning it
     this.messageBubble.x = -this.messageBubble.bubbleWidth * 0.5;

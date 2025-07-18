@@ -1,4 +1,4 @@
-import { Container, HTMLText } from "pixi.js";
+import { Container, Graphics, HTMLText } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
 
 /**
@@ -18,14 +18,22 @@ export class TypingTextDisplay extends Container {
   /** Whether the current character is wrong */
   private hasWrongCharacter: boolean = false;
 
-  /** Background container for styling */
-  private background: Container;
+  /** Background graphics for styling */
+  private background: Graphics;
+
+  /** Padding for the text display */
+  private padding: number = 20;
+
+  /** Maximum width for the display */
+  private maxWidth: number = 600;
 
   constructor() {
     super();
 
-    // Create background container
-    this.background = new Container();
+    console.log("TypingTextDisplay - constructor called");
+
+    // Create background graphics
+    this.background = new Graphics();
     this.addChild(this.background);
 
     // Create text display with HTML support for colors
@@ -33,14 +41,14 @@ export class TypingTextDisplay extends Container {
       text: "",
       style: {
         fontFamily: "Arial",
-        fontSize: 24,
+        fontSize: 20,
         fill: 0xffffff,
         wordWrap: true,
-        wordWrapWidth: 800,
-        align: "left",
+        wordWrapWidth: this.maxWidth - this.padding * 2,
+        align: "center",
       },
     });
-    this.textDisplay.anchor.set(0, 0.5); // Left-aligned, vertically centered
+    this.textDisplay.anchor.set(0.5, 0.5);
     this.addChild(this.textDisplay);
 
     this.updateDisplay();
@@ -50,6 +58,7 @@ export class TypingTextDisplay extends Container {
    * Set the text to be typed
    */
   public setText(text: string): void {
+    console.log("TypingTextDisplay - setText called with:", text);
     this.fullText = text;
     this.typedText = "";
     this.hasWrongCharacter = false;
@@ -62,10 +71,7 @@ export class TypingTextDisplay extends Container {
   public typeCharacter(char: string): boolean {
     const nextExpectedChar = this.getNextExpectedCharacter();
 
-    if (
-      nextExpectedChar &&
-      nextExpectedChar.toLowerCase() === char.toLowerCase()
-    ) {
+    if (nextExpectedChar && nextExpectedChar === char) {
       this.typedText += nextExpectedChar; // Use the original case from the text
       this.hasWrongCharacter = false;
       this.updateDisplay();
@@ -161,8 +167,13 @@ export class TypingTextDisplay extends Container {
    * Update the visual display
    */
   private updateDisplay(): void {
+    console.log(
+      "TypingTextDisplay - updateDisplay called, fullText:",
+      this.fullText,
+    );
     if (this.fullText.length === 0) {
       this.textDisplay.text = "";
+      this.updateBackground();
       return;
     }
 
@@ -182,8 +193,8 @@ export class TypingTextDisplay extends Container {
       const nextChar = remainingText[0];
       const restOfText = remainingText.slice(1);
 
-      // Next character - red if wrong, white if normal
-      const nextCharColor = this.hasWrongCharacter ? "#ff0000" : "#ffffff";
+      // Next character - red if wrong, yellow if normal (highlighted)
+      const nextCharColor = this.hasWrongCharacter ? "#ff0000" : "#ffff00";
       htmlText += `<span style="color: ${nextCharColor}">${this.escapeHtml(nextChar)}</span>`;
 
       // Rest of the text in white
@@ -193,6 +204,52 @@ export class TypingTextDisplay extends Container {
     }
 
     this.textDisplay.text = htmlText;
+    console.log("TypingTextDisplay - text set to:", htmlText);
+    this.updateBackground();
+  }
+
+  /**
+   * Update the background graphics
+   */
+  private updateBackground(): void {
+    console.log("TypingTextDisplay - updateBackground called");
+    this.background.clear();
+
+    if (this.fullText.length === 0) {
+      console.log("TypingTextDisplay - no text, skipping background");
+      return;
+    }
+
+    // Calculate bubble dimensions based on text
+    const textBounds = this.textDisplay.getBounds();
+    const bubbleWidth = Math.min(
+      textBounds.width + this.padding * 2,
+      this.maxWidth,
+    );
+    const bubbleHeight = textBounds.height + this.padding * 2;
+
+    // Create background with rounded corners (MessageBubble style)
+    this.background
+      .roundRect(
+        -bubbleWidth / 2,
+        -bubbleHeight / 2,
+        bubbleWidth,
+        bubbleHeight,
+        12,
+      )
+      .fill({ color: 0x1c1d22 });
+
+    // Add yellow stroke on left side (MessageBubble style)
+    this.background
+      .roundRect(-bubbleWidth / 2, -bubbleHeight / 2, 3, bubbleHeight, 12)
+      .fill({ color: 0xffff00 });
+
+    console.log(
+      "TypingTextDisplay - background created with dimensions:",
+      bubbleWidth,
+      "x",
+      bubbleHeight,
+    );
   }
 
   /**
@@ -211,8 +268,13 @@ export class TypingTextDisplay extends Container {
    * Position the display
    */
   public resize(width: number, height: number): void {
-    this.x = -width * 0.4; // Position to the left of center
-    this.y = GameConstants.TYPING_TEXT_Y;
+    this.x = 0; // Center horizontally relative to mainContainer
+    this.y = height / 2 - 200; // Position near bottom relative to mainContainer center
+    console.log(
+      "TypingTextDisplay - resized and positioned at:",
+      this.x,
+      this.y,
+    );
   }
 
   /**

@@ -1,4 +1,4 @@
-import { Container, Graphics } from "pixi.js";
+import { Container, Graphics, Text } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
 
 /**
@@ -10,10 +10,25 @@ export class ProgressBar extends Container {
   private increments: Graphics[] = [];
 
   /** Background graphics */
-  private background: Graphics;
+  private background!: Graphics;
 
   /** Level separator lines */
   private levelSeparators: Graphics[] = [];
+
+  /** Week division lines */
+  private weekDividers: Graphics[] = [];
+
+  /** Week labels */
+  private weekLabels: Text[] = [];
+
+  /** Demo day label */
+  private demoDayLabel!: Text;
+
+  /** Deploy label */
+  private deployLabel!: Text;
+
+  /** Promo label */
+  private promoLabel!: Text;
 
   /** Progress bar width */
   private readonly PROGRESS_BAR_WIDTH = 800;
@@ -31,8 +46,11 @@ export class ProgressBar extends Container {
   /** Gap between increments */
   private readonly INCREMENT_GAP = 1;
 
-  /** Level boundaries (30% for level 1, 70% for level 2, 100% for level 3) */
-  private readonly LEVEL_BOUNDARIES = [0.3, 0.7, 1.0];
+  /** Level boundaries (aligned with week divisions) */
+  private readonly LEVEL_BOUNDARIES = [0.3, 0.7, 1.0]; // Week 3 = 30%, Week 7 = 70%
+
+  /** Progress tracking for each level (0-1 for each level) */
+  private levelProgress: [number, number, number] = [0, 0, 0];
 
   constructor() {
     super();
@@ -40,6 +58,7 @@ export class ProgressBar extends Container {
     this.createBackground();
     this.createIncrements();
     this.createLevelSeparators();
+    this.createWeekDivisions();
     this.updateProgress(1, 0, 1); // Initialize with default values
   }
 
@@ -79,8 +98,12 @@ export class ProgressBar extends Container {
       // Determine color based on which level this increment belongs to
       const progress = i / this.INCREMENT_COUNT;
       let incrementColor = 0x00aa00; // Green for level 1
-      if (progress >= 0.3 && progress < 0.7) incrementColor = 0x0088ff; // Blue for level 2
-      if (progress >= 0.7) incrementColor = 0xff6600; // Orange for level 3
+      if (
+        progress >= this.LEVEL_BOUNDARIES[0] &&
+        progress < this.LEVEL_BOUNDARIES[1]
+      )
+        incrementColor = 0x0088ff; // Blue for level 2
+      if (progress >= this.LEVEL_BOUNDARIES[1]) incrementColor = 0xff6600; // Orange for level 3
 
       increment.fill(incrementColor);
       increment.alpha = 0.2; // Start very dimmed
@@ -115,6 +138,93 @@ export class ProgressBar extends Container {
   }
 
   /**
+   * Create week divisions and labels
+   */
+  private createWeekDivisions(): void {
+    const weekCount = 10;
+    
+    for (let week = 1; week <= weekCount; week++) {
+      // Create week divider line
+      const divider = new Graphics();
+      const x = -this.PROGRESS_BAR_WIDTH / 2 + (week / weekCount) * this.PROGRESS_BAR_WIDTH;
+      
+      divider.rect(
+        x - 1,
+        -this.PROGRESS_BAR_HEIGHT / 2 - 15, // Position above the progress bar
+        2,
+        this.PROGRESS_BAR_HEIGHT + 15, // Extend above the bar
+      );
+      divider.fill(0xcccccc);
+      divider.alpha = 0.6;
+
+      this.weekDividers.push(divider);
+      this.addChild(divider);
+
+      // Create week label
+      const label = new Text({
+        text: `${week} week`,
+        style: {
+          fontFamily: GameConstants.FONT_FAMILY,
+          fontSize: 12,
+          fill: 0xffffff,
+          fontWeight: "bold",
+        },
+      });
+      label.anchor.set(0.5, 1); // Center horizontally, align to bottom
+      label.x = x;
+      label.y = -this.PROGRESS_BAR_HEIGHT / 2 - 20; // Position above the divider
+
+      this.weekLabels.push(label);
+      this.addChild(label);
+    }
+
+    // Create DEMO DAAAAAY label above week 10
+    this.demoDayLabel = new Text({
+      text: "DEMO DAAAAAY",
+      style: {
+        fontFamily: GameConstants.FONT_FAMILY,
+        fontSize: 16,
+        fill: 0xff0000, // Red color
+        fontWeight: "bold",
+      },
+    });
+    this.demoDayLabel.anchor.set(0.5, 1); // Center horizontally, align to bottom
+    this.demoDayLabel.x = -this.PROGRESS_BAR_WIDTH / 2 + (10 / 10) * this.PROGRESS_BAR_WIDTH; // Position at week 10
+    this.demoDayLabel.y = -this.PROGRESS_BAR_HEIGHT / 2 - 45; // Position above the week 10 label
+    this.addChild(this.demoDayLabel);
+
+    // Create DEPLOOOY label above week 3
+    this.deployLabel = new Text({
+      text: "DEPLOOOY",
+      style: {
+        fontFamily: GameConstants.FONT_FAMILY,
+        fontSize: 16,
+        fill: 0xff0000, // Red color
+        fontWeight: "bold",
+      },
+    });
+    this.deployLabel.anchor.set(0.5, 1); // Center horizontally, align to bottom
+    this.deployLabel.x = -this.PROGRESS_BAR_WIDTH / 2 + (3 / 10) * this.PROGRESS_BAR_WIDTH; // Position at week 3
+    this.deployLabel.y = -this.PROGRESS_BAR_HEIGHT / 2 - 45; // Position above the week 3 label
+    this.addChild(this.deployLabel);
+
+    // Create PROMOOOO label above week 7
+    this.promoLabel = new Text({
+      text: "PROMOOOO",
+      style: {
+        fontFamily: GameConstants.FONT_FAMILY,
+        fontSize: 16,
+        fill: 0xff0000, // Red color
+        fontWeight: "bold",
+      },
+    });
+    this.promoLabel.anchor.set(0.5, 1); // Center horizontally, align to bottom
+    this.promoLabel.x = -this.PROGRESS_BAR_WIDTH / 2 + (7 / 10) * this.PROGRESS_BAR_WIDTH; // Position at week 7
+    this.promoLabel.y = -this.PROGRESS_BAR_HEIGHT / 2 - 45; // Position above the week 7 label
+    this.addChild(this.promoLabel);
+  }
+
+  /**
    * Update progress bar based on current level and remaining items
    */
   public updateProgress(
@@ -123,7 +233,8 @@ export class ProgressBar extends Container {
     totalItems: number,
   ): void {
     const completedItems = totalItems - remainingItems;
-    this.updateProgressByItems(currentLevel, completedItems, totalItems);
+    const levelProgressValue = totalItems > 0 ? completedItems / totalItems : 0;
+    this.setLevelProgress(currentLevel, levelProgressValue);
   }
 
   /**
@@ -134,61 +245,108 @@ export class ProgressBar extends Container {
     typedWords: number,
     totalWords: number,
   ): void {
-    this.updateProgressByItems(3, typedWords, totalWords);
+    const levelProgressValue = totalWords > 0 ? typedWords / totalWords : 0;
+    this.setLevelProgress(3, levelProgressValue);
   }
 
   /**
-   * Update progress based on completed items for any level
+   * Set progress for a specific level
    */
-  private updateProgressByItems(
-    currentLevel: 1 | 2 | 3,
-    completedItems: number,
-    totalItems: number,
-  ): void {
-    // Calculate progress boundaries for each level
-    let levelStart = 0;
-    let levelEnd = 0;
+  public setLevelProgress(level: 1 | 2 | 3, progress: number): void {
+    // Clamp progress between 0 and 1
+    progress = Math.max(0, Math.min(1, progress));
 
-    if (currentLevel === 1) {
-      levelStart = 0;
-      levelEnd = 0.3;
-    } else if (currentLevel === 2) {
-      levelStart = 0.3;
-      levelEnd = 0.7;
-    } else if (currentLevel === 3) {
-      levelStart = 0.7;
-      levelEnd = 1.0;
-    }
+    // Update the specific level progress
+    this.levelProgress[level - 1] = progress;
 
-    // Calculate progress within current level
-    const levelProgress = totalItems > 0 ? completedItems / totalItems : 0;
-    const overallProgress =
-      levelStart + levelProgress * (levelEnd - levelStart);
-
-    this.updateIncrementVisuals(overallProgress);
+    // Update visual representation
+    this.updateIncrementVisualsFromLevelProgress();
   }
 
   /**
-   * Update visual appearance of increments
+   * Mark a level as completed
    */
-  private updateIncrementVisuals(overallProgress: number): void {
-    const filledIncrements = Math.floor(overallProgress * this.INCREMENT_COUNT);
+  public completeLevelProgress(level: 1 | 2 | 3): void {
+    console.log(
+      `ProgressBar - completeLevelProgress called for level ${level}`,
+    );
+    console.log(`ProgressBar - Progress before completion:`, [
+      ...this.levelProgress,
+    ]);
+    this.setLevelProgress(level, 1.0);
+    console.log(`ProgressBar - Progress after completion:`, [
+      ...this.levelProgress,
+    ]);
+  }
 
+  /**
+   * Update visual appearance of increments based on level progress
+   */
+  private updateIncrementVisualsFromLevelProgress(): void {
     for (let i = 0; i < this.INCREMENT_COUNT; i++) {
       const increment = this.increments[i];
+      const globalProgress = i / this.INCREMENT_COUNT;
 
-      if (i < filledIncrements) {
-        // Fully filled increment
-        increment.alpha = 1.0;
-      } else if (i === filledIncrements) {
-        // Partially filled increment
-        const partialProgress = (overallProgress * this.INCREMENT_COUNT) % 1;
-        increment.alpha = 0.2 + 0.8 * partialProgress;
+      // Determine which level this increment belongs to
+      let currentLevel: 1 | 2 | 3;
+      let levelStart: number;
+      let levelEnd: number;
+
+      if (globalProgress < this.LEVEL_BOUNDARIES[0]) {
+        currentLevel = 1;
+        levelStart = 0;
+        levelEnd = this.LEVEL_BOUNDARIES[0];
+      } else if (globalProgress < this.LEVEL_BOUNDARIES[1]) {
+        currentLevel = 2;
+        levelStart = this.LEVEL_BOUNDARIES[0];
+        levelEnd = this.LEVEL_BOUNDARIES[1];
       } else {
-        // Empty increment
-        increment.alpha = 0.2;
+        currentLevel = 3;
+        levelStart = this.LEVEL_BOUNDARIES[1];
+        levelEnd = this.LEVEL_BOUNDARIES[2];
+      }
+
+      // Calculate position within the level segment
+      const positionInLevel =
+        (globalProgress - levelStart) / (levelEnd - levelStart);
+      const levelProgressValue = this.levelProgress[currentLevel - 1];
+
+      // Set alpha based on level progress
+      if (positionInLevel <= levelProgressValue) {
+        increment.alpha = 1.0; // Filled
+      } else {
+        // Check if this is the next increment to be filled (partial fill)
+        const nextPosition =
+          ((i + 1) / this.INCREMENT_COUNT - levelStart) /
+          (levelEnd - levelStart);
+        if (
+          positionInLevel <=
+          levelProgressValue +
+            1 / this.INCREMENT_COUNT / (levelEnd - levelStart)
+        ) {
+          const partialProgress =
+            (levelProgressValue - positionInLevel) /
+            (1 / this.INCREMENT_COUNT / (levelEnd - levelStart));
+          increment.alpha = Math.max(0.2, 0.2 + 0.8 * partialProgress);
+        } else {
+          increment.alpha = 0.2; // Empty
+        }
       }
     }
+  }
+
+  /**
+   * Get progress for a specific level
+   */
+  public getLevelProgress(level: 1 | 2 | 3): number {
+    return this.levelProgress[level - 1];
+  }
+
+  /**
+   * Check if a level is completed
+   */
+  public isLevelCompleted(level: 1 | 2 | 3): boolean {
+    return this.levelProgress[level - 1] >= 1.0;
   }
 
   /**
@@ -207,9 +365,23 @@ export class ProgressBar extends Container {
    * Reset progress bar
    */
   public reset(): void {
+    this.levelProgress = [0, 0, 0];
     for (const increment of this.increments) {
       increment.alpha = 0.2;
     }
+  }
+
+  /**
+   * Reset progress for a specific level
+   */
+  public resetLevel(level: 1 | 2 | 3): void {
+    console.log(`ProgressBar - resetLevel called for level ${level}`);
+    console.log(`ProgressBar - Progress before reset:`, [
+      ...this.levelProgress,
+    ]);
+    this.levelProgress[level - 1] = 0;
+    console.log(`ProgressBar - Progress after reset:`, [...this.levelProgress]);
+    this.updateIncrementVisualsFromLevelProgress();
   }
 
   /**
@@ -231,10 +403,20 @@ export class ProgressBar extends Container {
    * Get current level based on progress
    */
   public getCurrentLevelFromProgress(): 1 | 2 | 3 {
-    const progress = this.getProgress();
-    if (progress < 0.3) return 1;
-    if (progress < 0.7) return 2;
+    // Return the highest incomplete level, or 3 if all are complete
+    if (!this.isLevelCompleted(1)) return 1;
+    if (!this.isLevelCompleted(2)) return 2;
     return 3;
+  }
+
+  /**
+   * Get overall completion percentage (0-1)
+   */
+  public getOverallProgress(): number {
+    return (
+      (this.levelProgress[0] + this.levelProgress[1] + this.levelProgress[2]) /
+      3
+    );
   }
 
   /**

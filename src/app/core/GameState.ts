@@ -1,3 +1,5 @@
+import { GameConstants } from "../data/GameConstants";
+
 /**
  * Global game state holder for sharing data between screens
  * Used to pass game information like final score to different screens

@@ -185,7 +185,7 @@ export class VictoryScreen extends Container {
   /** Show screen with animations */
   public async show(): Promise<void> {
     // Play victory music
-    engine().audio.bgm.play("main/sounds/bgm-main.mp3", { volume: 0.3 });
+    // engine().audio.bgm.play("main/sounds/bgm-main.mp3", { volume: 0.002 });
 
     // Enable input listening
     this.inputManager.setEnabled(true);

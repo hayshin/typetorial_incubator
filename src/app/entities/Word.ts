@@ -1,6 +1,5 @@
 import { Container } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
-import { GameState } from "../core/GameState";
 import { MessageBubble } from "../ui/MessageBubble";
 
 /**
@@ -39,11 +38,15 @@ export class Word extends Container {
   /** Whether this is a player message (moves right) */
   private isPlayerMessage: boolean = false;
 
+  /** Whether the current character is wrong */
+  private hasWrongCharacter: boolean = false;
+
   constructor(text: string, speed?: number, author?: string) {
     // constructor(text: string, speed?: number) {
     super();
 
-    this.targetText = text.toLowerCase();
+    console.log("Word - constructor called with:", { text, speed, author });
+    this.targetText = text;
     this.speed = speed || GameConstants.WORD_SPEED;
 
     // Set random angle for movement (between -30 and 30 degrees)
@@ -52,17 +55,11 @@ export class Word extends Container {
     this.velocityY = this.speed * Math.sin(angle);
 
     // Create message bubble with sender name and word as message
-    this.messageBubble = new MessageBubble(
-      author || "Mentor",
-      this.targetText,
-      {
-        maxWidth: GameConstants.MESSAGE_MAX_WIDTH,
-        messageSize: 20,
-        senderNameSize: 20,
-        level: GameState.getCurrentLevel(), // Pass current level
-        author: author || "Mentor", // Pass author for styling
-      },
-    );
+    this.messageBubble = new MessageBubble(author || "игрок", this.targetText, {
+      maxWidth: GameConstants.MESSAGE_MAX_WIDTH,
+      messageSize: 20,
+      senderNameSize: 20,
+    });
 
     // Center the bubble by positioning it
     this.messageBubble.x = -this.messageBubble.bubbleWidth * 0.5;
@@ -73,6 +70,8 @@ export class Word extends Container {
     // Start from right side of screen
     this.x = GameConstants.WORD_SPAWN_X;
     this.y = this.getRandomSpawnY();
+
+    console.log("Word - created and positioned at:", this.x, this.y);
 
     // Fade in animation
     this.alpha = 0;
@@ -143,10 +142,11 @@ export class Word extends Container {
     if (this.isCompleted || !this.isActive) return false;
 
     const expectedChar = this.targetText[this.typedProgress];
-    const typedChar = char.toLowerCase();
+    const typedChar = char;
 
     if (typedChar === expectedChar) {
       this.typedProgress++;
+      this.hasWrongCharacter = false;
       this.updateMessageDisplay();
 
       // Check if word is completed
@@ -157,6 +157,8 @@ export class Word extends Container {
       return true;
     } else {
       // Wrong character - show error state
+      this.hasWrongCharacter = true;
+      this.updateMessageDisplay();
       this.showError();
       return false;
     }
@@ -169,11 +171,28 @@ export class Word extends Container {
     this.isActive = active;
 
     if (active) {
-      // Slightly scale up when active, but don't change color
+      // Bring this word to front so it's visible above all others
+      this.bringToFront();
+      // Slightly scale up when active and make fully opaque
       this.scale.set(1.1, 1.1);
+      // this.alpha = 1.0;
     } else {
-      // Return to normal state
+      // Return to normal state with slightly reduced opacity
       this.scale.set(1, 1);
+      // this.alpha = 0.8;
+    }
+  }
+
+  /**
+   * Bring this word to the front (top layer) above all other words
+   */
+  public bringToFront(): void {
+    if (this.parent) {
+      // Remove from current position and add back at the end
+      // This ensures it's on the topmost layer
+      const parent = this.parent;
+      parent.removeChild(this);
+      parent.addChild(this);
     }
   }
 
@@ -217,6 +236,8 @@ export class Word extends Container {
     setTimeout(() => {
       this.scale.set(1, 1);
       this.messageBubble.background.tint = originalBgColor;
+      this.hasWrongCharacter = false;
+      this.updateMessageDisplay();
     }, 100);
   }
 
@@ -224,9 +245,15 @@ export class Word extends Container {
    * Update message display to show typing progress
    */
   private updateMessageDisplay(): void {
-    // For now, just show the full text without HTML markup
-    // The typing progress visual feedback can be handled differently if needed
-    this.messageBubble.setMessage(this.targetText);
+    // Get typed portion of the text
+    const typedText = this.targetText.slice(0, this.typedProgress);
+
+    // Use the new method with typing progress and error highlighting
+    this.messageBubble.setMessageWithTypingProgress(
+      this.targetText,
+      typedText,
+      this.hasWrongCharacter,
+    );
   }
 
   /**
@@ -249,7 +276,7 @@ export class Word extends Container {
    * Check if this word matches the start of given input
    */
   public matchesInput(input: string): boolean {
-    return this.targetText.startsWith(input.toLowerCase());
+    return this.targetText.startsWith(input);
   }
 
   /**

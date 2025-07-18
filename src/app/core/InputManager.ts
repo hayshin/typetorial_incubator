@@ -40,17 +40,17 @@ export class InputManager {
   private handleKeyDown(event: KeyboardEvent): void {
     if (!this.isEnabled) return;
 
-    const key = event.key.toLowerCase();
+    const key = event.key;
 
     // Handle special keys
-    if (key === "enter") {
+    if (key === "Enter") {
       if (this.onEnter) {
         this.onEnter();
       }
       return;
     }
 
-    if (key === "escape") {
+    if (key === "Escape") {
       if (this.onEscape) {
         this.onEscape();
       }

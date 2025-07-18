@@ -71,10 +71,7 @@ export class TypingTextDisplay extends Container {
   public typeCharacter(char: string): boolean {
     const nextExpectedChar = this.getNextExpectedCharacter();
 
-    if (
-      nextExpectedChar &&
-      nextExpectedChar.toLowerCase() === char.toLowerCase()
-    ) {
+    if (nextExpectedChar && nextExpectedChar === char) {
       this.typedText += nextExpectedChar; // Use the original case from the text
       this.hasWrongCharacter = false;
       this.updateDisplay();

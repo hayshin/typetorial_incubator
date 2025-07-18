@@ -46,7 +46,7 @@ export class Word extends Container {
     super();
 
     console.log("Word - constructor called with:", { text, speed, author });
-    this.targetText = text.toLowerCase();
+    this.targetText = text;
     this.speed = speed || GameConstants.WORD_SPEED;
 
     // Set random angle for movement (between -30 and 30 degrees)
@@ -142,7 +142,7 @@ export class Word extends Container {
     if (this.isCompleted || !this.isActive) return false;
 
     const expectedChar = this.targetText[this.typedProgress];
-    const typedChar = char.toLowerCase();
+    const typedChar = char;
 
     if (typedChar === expectedChar) {
       this.typedProgress++;
@@ -259,7 +259,7 @@ export class Word extends Container {
    * Check if this word matches the start of given input
    */
   public matchesInput(input: string): boolean {
-    return this.targetText.startsWith(input.toLowerCase());
+    return this.targetText.startsWith(input);
   }
 
   /**

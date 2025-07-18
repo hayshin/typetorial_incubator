@@ -194,20 +194,19 @@ export class MainScreen extends Container {
 
   /** Handle character typed for levels 1-2 */
   private handleLevel12CharacterTyped(char: string): void {
-    const lowerChar = char.toLowerCase();
     const activeWord = this.wordSpawner.getActiveWord();
 
     // If we have an active word, check if this character is correct
     if (activeWord && !activeWord.isCompleted) {
       const expectedChar = activeWord.getNextCharacter();
 
-      if (expectedChar === lowerChar) {
+      if (expectedChar === char) {
         // Correct character - add to input and process
-        this.currentInput += lowerChar;
+        this.currentInput += char;
         this.wrongCharHighlight = false;
         this.updateInputDisplay();
         this.shootBullet();
-        this.processActiveWordInput(activeWord, lowerChar);
+        this.processActiveWordInput(activeWord, char);
       } else {
         // Wrong character - just highlight the expected character in red
         this.wrongCharHighlight = true;
@@ -216,18 +215,18 @@ export class MainScreen extends Container {
       }
     } else {
       // No active word - try to find matching word
-      const potentialInput = this.currentInput + lowerChar;
+      const potentialInput = this.currentInput + char;
       const matchingWord = this.wordSpawner.findMatchingWord(potentialInput);
 
       if (matchingWord) {
         // Found matching word - add character and activate it
-        this.currentInput += lowerChar;
+        this.currentInput += char;
         this.wrongCharHighlight = false;
         this.updateInputDisplay();
         this.wordSpawner.setActiveWord(matchingWord);
         this.player.setTarget(matchingWord);
         this.shootBullet();
-        this.processActiveWordInput(matchingWord, lowerChar);
+        this.processActiveWordInput(matchingWord, char);
       }
       // If no matching word found, ignore the character
     }

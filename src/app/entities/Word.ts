@@ -171,6 +171,11 @@ export class Word extends Container {
     this.isActive = active;
 
     if (active) {
+      // Enable sortable children on parent if not already enabled
+      if (this.parent && !this.parent.sortableChildren) {
+        this.parent.sortableChildren = true;
+      }
+
       // Bring this word to front so it's visible above all others
       this.bringToFront();
       // Slightly scale up when active and make fully opaque
@@ -179,6 +184,8 @@ export class Word extends Container {
     } else {
       // Return to normal state with slightly reduced opacity
       this.scale.set(1, 1);
+      // Reset z-index to normal
+      this.zIndex = 0;
       // this.alpha = 0.8;
     }
   }
@@ -188,11 +195,36 @@ export class Word extends Container {
    */
   public bringToFront(): void {
     if (this.parent) {
+      console.log("Word - bringing to front:", this.targetText);
       // Remove from current position and add back at the end
       // This ensures it's on the topmost layer
       const parent = this.parent;
+      const childIndex = parent.getChildIndex(this);
+      console.log(
+        "Word - current child index:",
+        childIndex,
+        "total children:",
+        parent.children.length,
+      );
+
       parent.removeChild(this);
       parent.addChild(this);
+
+      const newIndex = parent.getChildIndex(this);
+      console.log(
+        "Word - new child index:",
+        newIndex,
+        "total children:",
+        parent.children.length,
+      );
+
+      // Also set z-index to ensure it's on top
+      this.zIndex = Date.now();
+      if (parent.sortableChildren) {
+        parent.sortChildren();
+      }
+    } else {
+      console.warn("Word - cannot bring to front, no parent:", this.targetText);
     }
   }
 

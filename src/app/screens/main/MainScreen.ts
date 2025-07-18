@@ -80,7 +80,7 @@ export class MainScreen extends Container {
     // Create dark tint overlay
     this.backgroundOverlay = new Graphics()
       .rect(0, 0, 1, 1) // Will be resized in resize method
-      .fill({ color: 0x000000, alpha: 0.5  }); // Dark tint with 30% opacity
+      .fill({ color: 0x000000, alpha: 0.5 }); // Dark tint with 30% opacity
     this.addChild(this.backgroundOverlay);
 
     this.mainContainer = new Container();
@@ -99,6 +99,9 @@ export class MainScreen extends Container {
 
     // Initialize player
     this.player = new Player();
+    this.player.setLives(3);
+    this.player.onTakeDamage = this.handlePlayerTakeDamage.bind(this);
+    this.player.onDefeated = this.handlePlayerDefeated.bind(this);
     this.mainContainer.addChild(this.player);
 
     // Initialize boss (hidden by default)
@@ -424,12 +427,8 @@ export class MainScreen extends Container {
 
   /** Handle word reaching edge */
   private async handleWordReachedEdge(): Promise<void> {
-    this.lives--;
-    this.updateLivesDisplay();
-
-    if (this.lives <= 0) {
-      await this.gameOver();
-    }
+    // Player takes damage (this will handle lives and defeat)
+    this.player.takeDamage();
   }
 
   /** Handle word completed */
@@ -542,6 +541,9 @@ export class MainScreen extends Container {
       this.checkPlayerMessageCollisions();
     }
 
+    // Check collisions between words and player
+    this.checkWordPlayerCollisions();
+
     // Update UI displays
     this.updateLevelDisplay();
     this.updateProgressBar();
@@ -570,6 +572,7 @@ export class MainScreen extends Container {
     this.wordSpawner.clearAllWords();
     this.wordSpawner.resetForLevel();
     this.player.clearBullets();
+    this.player.setLives(3);
 
     // Reset progress tracking
     this.completedMessages = 0;
@@ -610,7 +613,8 @@ export class MainScreen extends Container {
     this.backgroundSprite.height = height;
 
     // Resize and position dark tint overlay
-    this.backgroundOverlay.clear()
+    this.backgroundOverlay
+      .clear()
       .rect(0, 0, width, height)
       .fill({ color: 0x000000, alpha: 0.5 });
     this.backgroundOverlay.x = 0;
@@ -739,6 +743,47 @@ export class MainScreen extends Container {
         word.isCompleted = true;
       }
     }
+  }
+
+  /** Check collisions between words and player */
+  private checkWordPlayerCollisions(): void {
+    const activeWords = this.wordSpawner.getActiveWords();
+
+    for (const word of activeWords) {
+      // Check if this is an enemy word (moving left) that hit the player
+      if (
+        !word.isPlayerWord() &&
+        !word.isCompleted &&
+        this.player.checkCollisionWithWord(word)
+      ) {
+        // Word hit the player - player takes damage
+        this.player.takeDamage();
+
+        // Mark word as completed to prevent multiple hits
+        word.isCompleted = true;
+
+        // Remove the word from screen
+        word.destroy();
+      }
+    }
+  }
+
+  /** Handle player taking damage */
+  private handlePlayerTakeDamage(): void {
+    // Sync MainScreen lives with player lives
+    this.lives = this.player.getCurrentLives();
+    this.updateLivesDisplay();
+
+    // This callback can be used for additional effects like screen shake, sounds, etc.
+    console.log(
+      `Player took damage! Lives remaining: ${this.player.getCurrentLives()}`,
+    );
+  }
+
+  /** Handle player defeat */
+  private async handlePlayerDefeated(): Promise<void> {
+    console.log("Player defeated!");
+    await this.gameOver();
   }
 
   /** Hide screen with animations */

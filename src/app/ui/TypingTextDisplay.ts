@@ -269,7 +269,7 @@ export class TypingTextDisplay extends Container {
    */
   public resize(width: number, height: number): void {
     this.x = 0; // Center horizontally relative to mainContainer
-    this.y = height / 2 - 100; // Position near bottom relative to mainContainer center
+    this.y = height / 2 - 200; // Position near bottom relative to mainContainer center
     console.log(
       "TypingTextDisplay - resized and positioned at:",
       this.x,

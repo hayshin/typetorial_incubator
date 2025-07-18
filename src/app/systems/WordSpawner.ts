@@ -127,7 +127,6 @@ export class WordSpawner {
     const speed = this.getSpeedForDifficulty();
     const word = new Word(messageEntry.text, speed, messageEntry.author);
 
-
     // const word = new Word(messageEntry.text, speed);
 
     // Set spawn position based on level and author
@@ -255,7 +254,10 @@ export class WordSpawner {
 
     // Check if there are any active assel words left
     const anyActiveAssel = this.activeWords.some(
-      (w) => w["messageBubble"] && w["messageBubble"]["senderName"] && w["messageBubble"]["senderName"].text.toLowerCase() === "асель"
+      (w) =>
+        w["messageBubble"] &&
+        w["messageBubble"]["senderName"] &&
+        w["messageBubble"]["senderName"].text.toLowerCase() === "асель",
     );
     if (!anyActiveAssel && this.onMentorSpeaking) {
       this.onMentorSpeaking(false);
@@ -433,7 +435,7 @@ export class WordSpawner {
       );
 
       // For testing: only use the first 2 messages from shuffled array
-      this.remainingMessages = shuffledMessages.slice(0, 5);
+      this.remainingMessages = shuffledMessages.slice(0, 2);
       this.totalMessages = this.remainingMessages.length;
 
       console.log(
@@ -475,8 +477,6 @@ export class WordSpawner {
       currentLevel,
     );
 
-    // TESTING: Comment out level advancement logic to stay on level 2
-    /*
     if (currentLevel < 3) {
       const nextLevel = (currentLevel + 1) as 1 | 2 | 3;
       console.log("WordSpawner - transitioning to nextLevel:", nextLevel);
@@ -489,10 +489,6 @@ export class WordSpawner {
         this.onLevelAdvance(nextLevel);
       }
     }
-    */
-    
-    // TESTING: Just log that level would have advanced
-    console.log("TESTING: Level completion detected but advancement disabled");
   }
 
   /**

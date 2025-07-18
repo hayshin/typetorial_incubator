@@ -1,4 +1,4 @@
-import { Container, Graphics } from "pixi.js";
+import { Container, Graphics, Text } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
 
 /**
@@ -10,10 +10,25 @@ export class ProgressBar extends Container {
   private increments: Graphics[] = [];
 
   /** Background graphics */
-  private background: Graphics;
+  private background!: Graphics;
 
   /** Level separator lines */
   private levelSeparators: Graphics[] = [];
+
+  /** Week division lines */
+  private weekDividers: Graphics[] = [];
+
+  /** Week labels */
+  private weekLabels: Text[] = [];
+
+  /** Demo day label */
+  private demoDayLabel!: Text;
+
+  /** Deploy label */
+  private deployLabel!: Text;
+
+  /** Promo label */
+  private promoLabel!: Text;
 
   /** Progress bar width */
   private readonly PROGRESS_BAR_WIDTH = 800;
@@ -31,8 +46,8 @@ export class ProgressBar extends Container {
   /** Gap between increments */
   private readonly INCREMENT_GAP = 1;
 
-  /** Level boundaries (33.33% for each level) */
-  private readonly LEVEL_BOUNDARIES = [0.3333, 0.6666, 1.0];
+  /** Level boundaries (aligned with week divisions) */
+  private readonly LEVEL_BOUNDARIES = [0.3, 0.7, 1.0]; // Week 3 = 30%, Week 7 = 70%
 
   /** Progress tracking for each level (0-1 for each level) */
   private levelProgress: [number, number, number] = [0, 0, 0];
@@ -43,6 +58,7 @@ export class ProgressBar extends Container {
     this.createBackground();
     this.createIncrements();
     this.createLevelSeparators();
+    this.createWeekDivisions();
     this.updateProgress(1, 0, 1); // Initialize with default values
   }
 
@@ -119,6 +135,93 @@ export class ProgressBar extends Container {
       this.levelSeparators.push(separator);
       this.addChild(separator);
     }
+  }
+
+  /**
+   * Create week divisions and labels
+   */
+  private createWeekDivisions(): void {
+    const weekCount = 10;
+    
+    for (let week = 1; week <= weekCount; week++) {
+      // Create week divider line
+      const divider = new Graphics();
+      const x = -this.PROGRESS_BAR_WIDTH / 2 + (week / weekCount) * this.PROGRESS_BAR_WIDTH;
+      
+      divider.rect(
+        x - 1,
+        -this.PROGRESS_BAR_HEIGHT / 2 - 15, // Position above the progress bar
+        2,
+        this.PROGRESS_BAR_HEIGHT + 15, // Extend above the bar
+      );
+      divider.fill(0xcccccc);
+      divider.alpha = 0.6;
+
+      this.weekDividers.push(divider);
+      this.addChild(divider);
+
+      // Create week label
+      const label = new Text({
+        text: `${week} week`,
+        style: {
+          fontFamily: GameConstants.FONT_FAMILY,
+          fontSize: 12,
+          fill: 0xffffff,
+          fontWeight: "bold",
+        },
+      });
+      label.anchor.set(0.5, 1); // Center horizontally, align to bottom
+      label.x = x;
+      label.y = -this.PROGRESS_BAR_HEIGHT / 2 - 20; // Position above the divider
+
+      this.weekLabels.push(label);
+      this.addChild(label);
+    }
+
+    // Create DEMO DAAAAAY label above week 10
+    this.demoDayLabel = new Text({
+      text: "DEMO DAAAAAY",
+      style: {
+        fontFamily: GameConstants.FONT_FAMILY,
+        fontSize: 16,
+        fill: 0xff0000, // Red color
+        fontWeight: "bold",
+      },
+    });
+    this.demoDayLabel.anchor.set(0.5, 1); // Center horizontally, align to bottom
+    this.demoDayLabel.x = -this.PROGRESS_BAR_WIDTH / 2 + (10 / 10) * this.PROGRESS_BAR_WIDTH; // Position at week 10
+    this.demoDayLabel.y = -this.PROGRESS_BAR_HEIGHT / 2 - 45; // Position above the week 10 label
+    this.addChild(this.demoDayLabel);
+
+    // Create DEPLOOOY label above week 3
+    this.deployLabel = new Text({
+      text: "DEPLOOOY",
+      style: {
+        fontFamily: GameConstants.FONT_FAMILY,
+        fontSize: 16,
+        fill: 0xff0000, // Red color
+        fontWeight: "bold",
+      },
+    });
+    this.deployLabel.anchor.set(0.5, 1); // Center horizontally, align to bottom
+    this.deployLabel.x = -this.PROGRESS_BAR_WIDTH / 2 + (3 / 10) * this.PROGRESS_BAR_WIDTH; // Position at week 3
+    this.deployLabel.y = -this.PROGRESS_BAR_HEIGHT / 2 - 45; // Position above the week 3 label
+    this.addChild(this.deployLabel);
+
+    // Create PROMOOOO label above week 7
+    this.promoLabel = new Text({
+      text: "PROMOOOO",
+      style: {
+        fontFamily: GameConstants.FONT_FAMILY,
+        fontSize: 16,
+        fill: 0xff0000, // Red color
+        fontWeight: "bold",
+      },
+    });
+    this.promoLabel.anchor.set(0.5, 1); // Center horizontally, align to bottom
+    this.promoLabel.x = -this.PROGRESS_BAR_WIDTH / 2 + (7 / 10) * this.PROGRESS_BAR_WIDTH; // Position at week 7
+    this.promoLabel.y = -this.PROGRESS_BAR_HEIGHT / 2 - 45; // Position above the week 7 label
+    this.addChild(this.promoLabel);
   }
 
   /**

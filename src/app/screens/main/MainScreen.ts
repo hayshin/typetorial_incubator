@@ -369,7 +369,11 @@ export class MainScreen extends Container {
     this.updateLevelDisplay();
     this.updateProgressDisplay();
     this.inputManager.setEnabled(true);
-    GameState.reset();
+
+    // Don't reset GameState during level transitions
+    if (!GameState.isTransitioning()) {
+      GameState.reset();
+    }
   }
 
   /** Resize the screen, fired whenever window size changes */

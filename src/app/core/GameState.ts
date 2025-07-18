@@ -79,6 +79,7 @@ export class GameState {
    * Start transition to next level
    */
   public static startLevelTransition(nextLevel: 1 | 2 | 3): void {
+    console.log("GameState - startLevelTransition to:", nextLevel);
     GameState.transitioningToLevel = nextLevel;
   }
 
@@ -86,6 +87,10 @@ export class GameState {
    * Get the level we're transitioning to
    */
   public static getTransitioningToLevel(): number | null {
+    console.log(
+      "GameState - getTransitioningToLevel returning:",
+      GameState.transitioningToLevel,
+    );
     return GameState.transitioningToLevel;
   }
 
@@ -93,8 +98,13 @@ export class GameState {
    * Complete level transition
    */
   public static completeLevelTransition(): void {
+    console.log(
+      "GameState - completeLevelTransition called, transitioningToLevel:",
+      GameState.transitioningToLevel,
+    );
     if (GameState.transitioningToLevel !== null) {
       GameState.currentLevel = GameState.transitioningToLevel as 1 | 2 | 3;
+      console.log("GameState - level changed to:", GameState.currentLevel);
       GameState.transitioningToLevel = null;
       GameState.levelProgress = 0;
     }
@@ -111,6 +121,7 @@ export class GameState {
    * Reset all state
    */
   public static reset(): void {
+    console.log("GameState - reset called");
     GameState.finalScore = 0;
     GameState.justEnded = false;
     GameState.currentLevel = 1;

@@ -202,8 +202,18 @@ export class LevelIntroScreen extends Container {
    * Update level info from GameState
    */
   private updateLevelInfo(): void {
-    const level =
-      GameState.getTransitioningToLevel() || GameState.getCurrentLevel();
+    const transitioningTo = GameState.getTransitioningToLevel();
+    const currentLevel = GameState.getCurrentLevel();
+    console.log(
+      "LevelIntroScreen - transitioningTo:",
+      transitioningTo,
+      "currentLevel:",
+      currentLevel,
+    );
+
+    const level = transitioningTo || currentLevel;
+    console.log("LevelIntroScreen - using level:", level);
+
     this.levelInfo = this.getLevelInfo(level as 1 | 2 | 3);
 
     this.titleLabel.text = this.levelInfo.title;

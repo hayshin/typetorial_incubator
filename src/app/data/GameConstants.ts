@@ -46,6 +46,27 @@ export class GameConstants {
     return GameConstants.GAME_WIDTH / 2 - GameConstants.MARGIN - 100;
   }
 
+  public static get SPEAKER_X() {
+    return GameConstants.GAME_WIDTH / 2 - GameConstants.MARGIN - 50;
+  }
+
+  public static get SPEAKER_Y() {
+    return 0; // Center vertically
+  }
+
+  // Level 3 constants
+  public static get TYPING_TEXT_Y() {
+    return GameConstants.GAME_HEIGHT / 2 - GameConstants.MARGIN - 100;
+  }
+
+  public static get PLAYER_MESSAGE_SPAWN_X() {
+    return GameConstants.PLAYER_X + 50; // Slightly to the right of player
+  }
+
+  public static get PLAYER_MESSAGE_SPAWN_Y() {
+    return 0; // Center vertically
+  }
+
   public static get WORD_SPAWN_Y_RANGE() {
     return {
       min: -GameConstants.GAME_HEIGHT / 2 + GameConstants.MARGIN,

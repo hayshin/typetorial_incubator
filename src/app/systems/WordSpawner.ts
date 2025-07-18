@@ -65,12 +65,25 @@ export class WordSpawner {
     // Update spawn timer
     this.spawnTimer += deltaTime * 1000; // Convert to milliseconds
 
+    // Debug logging for spawning conditions
+    if (this.spawnTimer >= this.spawnInterval) {
+      console.log("WordSpawner - update: spawn timer ready", {
+        isSpawning: this.isSpawning,
+        spawnTimer: this.spawnTimer,
+        spawnInterval: this.spawnInterval,
+        activeWordsCount: this.activeWords.length,
+        maxWords: this.maxWords,
+        remainingMessages: this.remainingMessages.length,
+      });
+    }
+
     // Spawn new word if timer elapsed and conditions are met
     if (
       this.isSpawning &&
       this.spawnTimer >= this.spawnInterval &&
       this.activeWords.length < this.maxWords
     ) {
+      console.log("WordSpawner - spawning word now");
       this.spawnWord();
       this.spawnTimer = 0;
     }
@@ -113,6 +126,9 @@ export class WordSpawner {
 
     const speed = this.getSpeedForDifficulty();
     const word = new Word(messageEntry.text, speed, messageEntry.author);
+
+
+    // const word = new Word(messageEntry.text, speed);
 
     // Set spawn position based on level and author
     const spawnPosition = this.getSpawnPosition(messageEntry);
@@ -338,6 +354,11 @@ export class WordSpawner {
    * Start spawning words
    */
   public startSpawning(): void {
+    console.log("WordSpawner - startSpawning called", {
+      remainingMessages: this.remainingMessages.length,
+      totalMessages: this.totalMessages,
+      currentLevel: GameState.getCurrentLevel(),
+    });
     this.isSpawning = true;
     this.spawnTimer = 0;
   }
@@ -405,7 +426,14 @@ export class WordSpawner {
     if (currentLevel === 1 || currentLevel === 2) {
       // Get all messages for current level
       const levelMessages = MessageDictionary.getMessagesByLevel(currentLevel);
-      this.remainingMessages = levelMessages;
+
+      // Shuffle the messages for randomness
+      const shuffledMessages = [...levelMessages].sort(
+        () => Math.random() - 0.5,
+      );
+
+      // For testing: only use the first 2 messages from shuffled array
+      this.remainingMessages = shuffledMessages.slice(0, 5);
       this.totalMessages = this.remainingMessages.length;
 
       console.log(

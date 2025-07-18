@@ -36,9 +36,11 @@ export class Word extends Container {
   /** Direction multiplier for movement (1 = right, -1 = left) */
   private directionMultiplier: number = -1;
 
-  constructor(text: string, speed?: number, author?: string) {
+  /** Whether this is a player message (moves right) */
+  private isPlayerMessage: boolean = false;
 
-  // constructor(text: string, speed?: number) {
+  constructor(text: string, speed?: number, author?: string) {
+    // constructor(text: string, speed?: number) {
     super();
 
     this.targetText = text.toLowerCase();
@@ -61,7 +63,7 @@ export class Word extends Container {
         author: author || "Mentor", // Pass author for styling
       },
     );
-    
+
     // Center the bubble by positioning it
     this.messageBubble.x = -this.messageBubble.bubbleWidth * 0.5;
     this.messageBubble.y = -this.messageBubble.bubbleHeight * 0.5;
@@ -84,10 +86,18 @@ export class Word extends Container {
    */
   public setDirection(direction: 1 | -1): void {
     this.directionMultiplier = direction;
+    this.isPlayerMessage = direction === 1; // Player messages move right
     // Update velocity to match new direction
     const angle = ((Math.random() - 0.5) * Math.PI) / 3;
     this.velocityX = this.directionMultiplier * this.speed * Math.cos(angle);
     this.velocityY = this.speed * Math.sin(angle);
+  }
+
+  /**
+   * Check if this is a player message
+   */
+  public isPlayerWord(): boolean {
+    return this.isPlayerMessage;
   }
 
   /**

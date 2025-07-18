@@ -246,16 +246,15 @@ export class MainScreen extends Container {
     } else {
       // Type character into the text display
       const success = this.typingTextDisplay.typeCharacter(char);
+      // Note: wrongCharHighlight state is now managed inside TypingTextDisplay
+      // We don't need to track it separately here
       if (success) {
-        this.wrongCharHighlight = false;
         // Check if current word is completed
         if (this.typingTextDisplay.isCurrentWordCompleted()) {
           // Word completed, ready to send on space press
           console.log("Level 3 - word completed, waiting for space");
         }
       } else {
-        // Wrong character
-        this.wrongCharHighlight = true;
         console.log("Level 3 - wrong character:", char);
       }
       this.updateLevel3InputDisplay();
@@ -286,16 +285,13 @@ export class MainScreen extends Container {
   /** Update input display for level 3 */
   private updateLevel3InputDisplay(): void {
     const nextChar = this.typingTextDisplay.getNextExpectedCharacter();
-    let displayText = `Next: ${nextChar || "SPACE"}`;
+    const currentWord = this.typingTextDisplay.getCurrentWord();
+    const progress = this.typingTextDisplay.getProgress();
 
-    if (this.wrongCharHighlight && nextChar) {
-      displayText += ` (Expected: ${nextChar})`;
-    }
+    let displayText = `Typing: ${currentWord} | Progress: ${Math.round(progress * 100)}%`;
 
     this.currentInputDisplay.text = displayText;
-    this.currentInputDisplay.style.fill = this.wrongCharHighlight
-      ? 0xff0000
-      : 0x00ff00;
+    this.currentInputDisplay.style.fill = 0x00ff00;
   }
 
   /** Handle backspace */
@@ -305,7 +301,6 @@ export class MainScreen extends Container {
     if (currentLevel === 3) {
       // Level 3: Backspace in text display
       this.typingTextDisplay.backspace();
-      this.wrongCharHighlight = false;
       this.updateLevel3InputDisplay();
     } else {
       // Levels 1-2: Original logic

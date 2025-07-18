@@ -177,6 +177,18 @@ export class MessageBubble extends Container {
   }
 
   /**
+   * Set the message text with typing progress (typed characters become invisible)
+   */
+  public setMessageWithProgress(fullMessage: string, typedProgress: number): void {
+    // Create the display text where typed characters are replaced with spaces
+    const displayText = fullMessage.split('').map((char, index) => {
+      return index < typedProgress ? ' ' : char;
+    }).join('');
+    
+    this.messageText.text = displayText;
+  }
+
+  /**
    * Get the bubble width
    */
   public get bubbleWidth(): number {

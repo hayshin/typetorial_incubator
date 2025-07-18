@@ -224,9 +224,8 @@ export class Word extends Container {
    * Update message display to show typing progress
    */
   private updateMessageDisplay(): void {
-    // For now, just show the full text without HTML markup
-    // The typing progress visual feedback can be handled differently if needed
-    this.messageBubble.setMessage(this.targetText);
+    // Show typing progress by removing typed characters while keeping bubble size
+    this.messageBubble.setMessageWithProgress(this.targetText, this.typedProgress);
   }
 
   /**

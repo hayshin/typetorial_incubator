@@ -5,6 +5,8 @@ import type { Ticker } from "pixi.js";
 import { Container } from "pixi.js";
 import { GameState } from "../../core/GameState";
 import { InputManager } from "../../core/InputManager";
+import { Level3TextManager } from "../../data/Level3TextManager";
+import { Boss } from "../../entities/Boss";
 import { Player } from "../../entities/Player";
 import type { Word } from "../../entities/Word";
 import { engine } from "../../getEngine";
@@ -12,8 +14,11 @@ import { PausePopup } from "../../popups/PausePopup";
 import { SettingsPopup } from "../../popups/SettingsPopup";
 import { WordSpawner } from "../../systems/WordSpawner";
 import { Label } from "../../ui/Label";
+import { ProgressBar } from "../../ui/ProgressBar";
+import { TypingTextDisplay } from "../../ui/TypingTextDisplay";
 import { GameOverScreen } from "../gameover/GameOverScreen";
 import { LevelIntroScreen } from "../levels/LevelIntroScreen";
+import { VictoryScreen } from "../victory/VictoryScreen";
 
 /** The screen that holds the app */
 export class MainScreen extends Container {
@@ -37,12 +42,20 @@ export class MainScreen extends Container {
   private livesDisplay!: Label;
   private levelDisplay!: Label;
   private progressDisplay!: Label;
+  private progressBar!: ProgressBar;
+
+  // Level 3 components
+  private typingTextDisplay!: TypingTextDisplay;
+  private boss!: Boss;
+  private currentBossText: string = "";
 
   // Game state
   private score: number = 0;
   private lives: number = 3;
   private currentInput: string = "";
   private wrongCharHighlight: boolean = false;
+  private completedMessages: number = 0;
+  private totalMessagesInLevel: number = 0;
 
   constructor() {
     super();
@@ -98,6 +111,12 @@ export class MainScreen extends Container {
     // Initialize player
     this.player = new Player();
     this.mainContainer.addChild(this.player);
+
+    // Initialize boss (hidden by default)
+    this.boss = new Boss();
+    this.boss.visible = false;
+    this.boss.onDefeated = this.handleBossDefeated.bind(this);
+    this.mainContainer.addChild(this.boss);
 
     console.log(`Player initialized at: (${this.player.x}, ${this.player.y})`);
     console.log(`MainContainer will be positioned at center during resize`);
@@ -171,10 +190,32 @@ export class MainScreen extends Container {
     });
     this.progressDisplay.y = 170;
     this.addChild(this.progressDisplay);
+
+    // Progress bar
+    this.progressBar = new ProgressBar();
+    this.addChild(this.progressBar);
+
+    // Level 3 typing text display
+    this.typingTextDisplay = new TypingTextDisplay();
+    this.typingTextDisplay.visible = false; // Hidden by default
+    this.mainContainer.addChild(this.typingTextDisplay);
   }
 
   /** Handle character typed */
   private handleCharacterTyped(char: string): void {
+    const currentLevel = GameState.getCurrentLevel();
+
+    if (currentLevel === 3) {
+      // Level 3: Type into the text display
+      this.handleLevel3CharacterTyped(char);
+    } else {
+      // Levels 1-2: Original word matching logic
+      this.handleLevel12CharacterTyped(char);
+    }
+  }
+
+  /** Handle character typed for levels 1-2 */
+  private handleLevel12CharacterTyped(char: string): void {
     const lowerChar = char.toLowerCase();
     const activeWord = this.wordSpawner.getActiveWord();
 
@@ -214,17 +255,100 @@ export class MainScreen extends Container {
     }
   }
 
+  /** Handle character typed for level 3 */
+  private handleLevel3CharacterTyped(char: string): void {
+    if (char === " ") {
+      // Space pressed - complete current word and send it
+      this.handleLevel3SpacePressed();
+    } else {
+      // Type character into the text display
+      const success = this.typingTextDisplay.typeCharacter(char);
+      // Note: wrongCharHighlight state is now managed inside TypingTextDisplay
+      // We don't need to track it separately here
+      if (success) {
+        // Check if current word is completed
+        if (this.typingTextDisplay.isCurrentWordCompleted()) {
+          // Word completed, ready to send on space press
+          console.log("Level 3 - word completed, waiting for space");
+        }
+      } else {
+        console.log("Level 3 - wrong character:", char);
+      }
+      this.updateLevel3InputDisplay();
+    }
+  }
+
+  /** Handle space pressed in level 3 */
+  private handleLevel3SpacePressed(): void {
+    const completedWord = this.typingTextDisplay.completeCurrentWord();
+    if (completedWord) {
+      // Send the word as a player message
+      const playerMessage = this.wordSpawner.spawnPlayerMessage(completedWord);
+      console.log("Level 3 - sent word:", completedWord);
+
+      // Word will damage boss when it reaches the right edge
+      // Damage is handled in word collision detection
+
+      // Check if entire text is completed
+      if (this.typingTextDisplay.isCompleted()) {
+        this.handleLevel3TextCompleted();
+      }
+    }
+  }
+
+  /** Handle level 3 text completion */
+  private handleLevel3TextCompleted(): void {
+    console.log("Level 3 - boss text completed!");
+    // Boss should be defeated by now, victory handled in handleBossDefeated
+  }
+
+  /** Handle boss defeated */
+  private async handleBossDefeated(): Promise<void> {
+    console.log("Boss defeated - showing victory screen!");
+
+    // Stop all game systems
+    this.wordSpawner.stopSpawning();
+    this.inputManager.setEnabled(false);
+
+    // Set final score
+    GameState.setFinalScore(this.score);
+
+    // Show victory screen
+    await engine().navigation.showScreen(VictoryScreen);
+  }
+
+  /** Update input display for level 3 */
+  private updateLevel3InputDisplay(): void {
+    const nextChar = this.typingTextDisplay.getNextExpectedCharacter();
+    const currentWord = this.typingTextDisplay.getCurrentWord();
+    const progress = this.typingTextDisplay.getProgress();
+
+    let displayText = `Typing: ${currentWord} | Progress: ${Math.round(progress * 100)}%`;
+
+    this.currentInputDisplay.text = displayText;
+    this.currentInputDisplay.style.fill = 0x00ff00;
+  }
+
   /** Handle backspace */
   private handleBackspace(): void {
-    if (this.currentInput.length > 0) {
-      this.currentInput = this.currentInput.slice(0, -1);
-      this.wrongCharHighlight = false;
-      this.updateInputDisplay();
+    const currentLevel = GameState.getCurrentLevel();
 
-      // If we cleared all input, deactivate current word
-      if (this.currentInput.length === 0) {
-        this.wordSpawner.setActiveWord(null);
-        this.player.setTarget(null);
+    if (currentLevel === 3) {
+      // Level 3: Backspace in text display
+      this.typingTextDisplay.backspace();
+      this.updateLevel3InputDisplay();
+    } else {
+      // Levels 1-2: Original logic
+      if (this.currentInput.length > 0) {
+        this.currentInput = this.currentInput.slice(0, -1);
+        this.wrongCharHighlight = false;
+        this.updateInputDisplay();
+
+        // If we cleared all input, deactivate current word
+        if (this.currentInput.length === 0) {
+          this.wordSpawner.setActiveWord(null);
+          this.player.setTarget(null);
+        }
       }
     }
   }
@@ -301,6 +425,9 @@ export class MainScreen extends Container {
     this.score += word.targetText.length * 10;
     this.updateScoreDisplay();
 
+    // Track completed messages for progress
+    this.completedMessages++;
+
     // Clear input and deactivate word
     this.clearInput();
   }
@@ -337,6 +464,37 @@ export class MainScreen extends Container {
   private updateProgressDisplay(): void {
     const progress = GameState.getLevelProgress();
     this.progressDisplay.text = `Progress: ${Math.round(progress)}%`;
+
+    // Update progress bar based on current level
+    const currentLevel = GameState.getCurrentLevel();
+
+    if (currentLevel === 3) {
+      // Level 3: Use typing progress with word count
+      const typingProgress = this.typingTextDisplay.getProgress();
+      const typedText = this.typingTextDisplay.getTypedText();
+      const fullText = this.typingTextDisplay.getFullText();
+
+      // Count words by splitting on spaces
+      const typedWords = typedText.trim()
+        ? typedText.trim().split(/\s+/).length
+        : 0;
+      const totalWords = fullText.trim().split(/\s+/).length;
+
+      this.progressBar.updateProgressWithTypingProgress(
+        typingProgress,
+        typedWords,
+        totalWords,
+      );
+    } else {
+      // Levels 1-2: Use completed messages (not remaining)
+      const remainingMessages =
+        this.totalMessagesInLevel - this.completedMessages;
+      this.progressBar.updateProgress(
+        currentLevel,
+        remainingMessages,
+        this.totalMessagesInLevel,
+      );
+    }
   }
 
   /** Game over */
@@ -363,6 +521,13 @@ export class MainScreen extends Container {
 
     // Update player and bullets
     this.player.update(time.deltaMS / 1000);
+
+    // Update boss if visible
+    if (this.boss.visible) {
+      this.boss.update(time.deltaMS / 1000);
+      // Check collisions between player messages and boss
+      this.checkPlayerMessageCollisions();
+    }
 
     // Update UI displays
     this.updateLevelDisplay();
@@ -392,6 +557,20 @@ export class MainScreen extends Container {
     this.wordSpawner.clearAllWords();
     this.wordSpawner.resetForLevel();
     this.player.clearBullets();
+
+    // Reset progress tracking
+    this.completedMessages = 0;
+    this.totalMessagesInLevel = 0;
+
+    // Reset level 3 components
+    this.typingTextDisplay.reset();
+    this.boss.reset();
+    this.boss.visible = false;
+    this.currentBossText = "";
+
+    // Reset progress bar
+    this.progressBar.reset();
+
     this.updateScoreDisplay();
     this.updateLivesDisplay();
     this.updateLevelDisplay();
@@ -427,6 +606,12 @@ export class MainScreen extends Container {
     this.livesDisplay.x = 50;
     this.levelDisplay.x = 50;
     this.progressDisplay.x = 50;
+
+    // Resize level 3 components
+    this.typingTextDisplay.resize(width, height);
+
+    // Resize progress bar
+    this.progressBar.resize(width, height);
   }
 
   /** Show screen with animations */
@@ -452,13 +637,83 @@ export class MainScreen extends Container {
 
     await finalPromise;
 
+    // Show progress bar with animation
+    this.progressBar.show();
+
+    // Setup level-specific components
+    this.setupLevelComponents();
+
     // Reset word spawner for current level and start spawning
     this.wordSpawner.resetForLevel();
     this.wordSpawner.startSpawning();
   }
 
+  /** Setup components specific to current level */
+  private setupLevelComponents(): void {
+    const currentLevel = GameState.getCurrentLevel();
+
+    if (currentLevel === 3) {
+      // Show typing text display for level 3
+      this.typingTextDisplay.visible = true;
+
+      // Show and setup boss
+      this.boss.visible = true;
+
+      // Get random boss text and set it
+      const bossText = Level3TextManager.getRandomText();
+      this.currentBossText = bossText.text;
+      this.typingTextDisplay.setText(this.currentBossText);
+
+      // Set boss health based on text length
+      const bossHealth = Level3TextManager.calculateBossHealth(
+        this.currentBossText,
+      );
+      this.boss.setHealth(bossHealth);
+
+      console.log("Level 3 - boss text set:", this.currentBossText);
+      console.log("Level 3 - boss health set:", bossHealth);
+
+      // Show boss with animation
+      this.boss.show();
+
+      // Update input display for level 3
+      this.updateLevel3InputDisplay();
+    } else {
+      // Reset progress tracking for levels 1-2
+      this.completedMessages = 0;
+      this.totalMessagesInLevel = this.wordSpawner.getTotalMessageCount();
+
+      // Hide typing text display and boss for levels 1-2
+      this.typingTextDisplay.visible = false;
+      this.boss.visible = false;
+    }
+  }
+
+  /** Check collisions between player messages and boss */
+  private checkPlayerMessageCollisions(): void {
+    const activeWords = this.wordSpawner.getActiveWords();
+
+    for (const word of activeWords) {
+      // Check if this is a player message (moving right) that reached the boss
+      if (
+        word.isPlayerWord() &&
+        word.x >= this.boss.x - 50 &&
+        !word.isCompleted
+      ) {
+        // Word hit the boss - deal damage
+        this.boss.takeDamage(word.targetText.length);
+
+        // Mark word as completed to prevent multiple hits
+        word.isCompleted = true;
+      }
+    }
+  }
+
   /** Hide screen with animations */
-  public async hide() {}
+  public async hide() {
+    // Hide progress bar
+    this.progressBar.hide();
+  }
 
   /** Auto pause the app when window go out of focus */
   public blur() {

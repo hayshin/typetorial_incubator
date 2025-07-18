@@ -1,6 +1,5 @@
-import { Container } from "pixi.js";
+import { Container, HTMLText } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
-import { Label } from "./Label";
 
 /**
  * Component for displaying text that needs to be typed in level 3
@@ -13,8 +12,11 @@ export class TypingTextDisplay extends Container {
   /** Current typed text */
   private typedText: string = "";
 
-  /** Label for displaying the text */
-  private textLabel: Label;
+  /** HTML text for displaying the text with colors */
+  private textDisplay: HTMLText;
+
+  /** Whether the current character is wrong */
+  private hasWrongCharacter: boolean = false;
 
   /** Background container for styling */
   private background: Container;
@@ -26,10 +28,11 @@ export class TypingTextDisplay extends Container {
     this.background = new Container();
     this.addChild(this.background);
 
-    // Create text label
-    this.textLabel = new Label({
+    // Create text display with HTML support for colors
+    this.textDisplay = new HTMLText({
       text: "",
       style: {
+        fontFamily: "Arial",
         fontSize: 24,
         fill: 0xffffff,
         wordWrap: true,
@@ -37,8 +40,8 @@ export class TypingTextDisplay extends Container {
         align: "left",
       },
     });
-    this.textLabel.anchor.set(0, 0.5); // Left-aligned, vertically centered
-    this.addChild(this.textLabel);
+    this.textDisplay.anchor.set(0, 0.5); // Left-aligned, vertically centered
+    this.addChild(this.textDisplay);
 
     this.updateDisplay();
   }
@@ -49,6 +52,7 @@ export class TypingTextDisplay extends Container {
   public setText(text: string): void {
     this.fullText = text;
     this.typedText = "";
+    this.hasWrongCharacter = false;
     this.updateDisplay();
   }
 
@@ -63,10 +67,13 @@ export class TypingTextDisplay extends Container {
       nextExpectedChar.toLowerCase() === char.toLowerCase()
     ) {
       this.typedText += nextExpectedChar; // Use the original case from the text
+      this.hasWrongCharacter = false;
       this.updateDisplay();
       return true;
     }
 
+    this.hasWrongCharacter = true;
+    this.updateDisplay();
     return false;
   }
 
@@ -76,6 +83,7 @@ export class TypingTextDisplay extends Container {
   public backspace(): void {
     if (this.typedText.length > 0) {
       this.typedText = this.typedText.slice(0, -1);
+      this.hasWrongCharacter = false;
       this.updateDisplay();
     }
   }
@@ -154,23 +162,49 @@ export class TypingTextDisplay extends Container {
    */
   private updateDisplay(): void {
     if (this.fullText.length === 0) {
-      this.textLabel.text = "";
+      this.textDisplay.text = "";
       return;
     }
 
-    // Create rich text with different colors for typed/untyped parts
+    // Create HTML text with different colors
     const typedPart = this.typedText;
-    const untypedPart = this.fullText.slice(this.typedText.length);
+    const remainingText = this.fullText.slice(this.typedText.length);
 
-    // For now, just show plain text (rich text styling can be added later)
-    this.textLabel.text = `${typedPart}${untypedPart}`;
+    let htmlText = "";
 
-    // Change style based on typing state
-    if (this.typedText.length === this.fullText.length) {
-      this.textLabel.style.fill = 0x00ff00; // Green when completed
-    } else {
-      this.textLabel.style.fill = 0xffffff; // White for normal text
+    // Typed characters in gray
+    if (typedPart.length > 0) {
+      htmlText += `<span style="color: #888888">${this.escapeHtml(typedPart)}</span>`;
     }
+
+    // Remaining text
+    if (remainingText.length > 0) {
+      const nextChar = remainingText[0];
+      const restOfText = remainingText.slice(1);
+
+      // Next character - red if wrong, white if normal
+      const nextCharColor = this.hasWrongCharacter ? "#ff0000" : "#ffffff";
+      htmlText += `<span style="color: ${nextCharColor}">${this.escapeHtml(nextChar)}</span>`;
+
+      // Rest of the text in white
+      if (restOfText.length > 0) {
+        htmlText += `<span style="color: #ffffff">${this.escapeHtml(restOfText)}</span>`;
+      }
+    }
+
+    this.textDisplay.text = htmlText;
+  }
+
+  /**
+   * Escape HTML characters
+   */
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
   /**
@@ -187,6 +221,7 @@ export class TypingTextDisplay extends Container {
   public reset(): void {
     this.fullText = "";
     this.typedText = "";
+    this.hasWrongCharacter = false;
     this.updateDisplay();
   }
 
@@ -202,5 +237,12 @@ export class TypingTextDisplay extends Container {
    */
   public getTypedText(): string {
     return this.typedText;
+  }
+
+  /**
+   * Get full text
+   */
+  public getFullText(): string {
+    return this.fullText;
   }
 }

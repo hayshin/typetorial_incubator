@@ -180,6 +180,17 @@ export class MainScreen extends Container {
     this.progressDisplay.y = 170;
     this.addChild(this.progressDisplay);
 
+    // Current input display
+    this.currentInputDisplay = new Label({
+      text: "",
+      style: {
+        fontSize: 18,
+        fill: 0x00ff00,
+      },
+    });
+    this.currentInputDisplay.y = 200;
+    this.addChild(this.currentInputDisplay);
+
     // Progress bar
     this.progressBar = new ProgressBar();
     this.addChild(this.progressBar);

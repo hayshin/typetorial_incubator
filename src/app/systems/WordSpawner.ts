@@ -59,12 +59,25 @@ export class WordSpawner {
     // Update spawn timer
     this.spawnTimer += deltaTime * 1000; // Convert to milliseconds
 
+    // Debug logging for spawning conditions
+    if (this.spawnTimer >= this.spawnInterval) {
+      console.log("WordSpawner - update: spawn timer ready", {
+        isSpawning: this.isSpawning,
+        spawnTimer: this.spawnTimer,
+        spawnInterval: this.spawnInterval,
+        activeWordsCount: this.activeWords.length,
+        maxWords: this.maxWords,
+        remainingMessages: this.remainingMessages.length,
+      });
+    }
+
     // Spawn new word if timer elapsed and conditions are met
     if (
       this.isSpawning &&
       this.spawnTimer >= this.spawnInterval &&
       this.activeWords.length < this.maxWords
     ) {
+      console.log("WordSpawner - spawning word now");
       this.spawnWord();
       this.spawnTimer = 0;
     }
@@ -318,6 +331,11 @@ export class WordSpawner {
    * Start spawning words
    */
   public startSpawning(): void {
+    console.log("WordSpawner - startSpawning called", {
+      remainingMessages: this.remainingMessages.length,
+      totalMessages: this.totalMessages,
+      currentLevel: GameState.getCurrentLevel(),
+    });
     this.isSpawning = true;
     this.spawnTimer = 0;
   }

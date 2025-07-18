@@ -75,8 +75,8 @@ export class GameConstants {
   }
 
   // Fixed constants
-  public static readonly WORD_SPEED = 150;
-  public static readonly WORD_SPAWN_INTERVAL = 2500;
+  public static readonly WORD_SPEED = 100;
+  public static readonly WORD_SPAWN_INTERVAL = 3000;
   public static readonly PLAYER_LIVES = 3;
 
   // Game configuration

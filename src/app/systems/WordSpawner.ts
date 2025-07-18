@@ -6,6 +6,7 @@ import {
   type MessageEntry,
 } from "../data/MessageDictionary";
 import { Word } from "../entities/Word";
+import { engine } from "../getEngine";
 
 /**
  * Manages spawning and lifecycle of words in the game
@@ -142,6 +143,9 @@ export class WordSpawner {
     console.log("WordSpawner - word positioned at:", word.x, word.y);
     this.activeWords.push(word);
     this.container.addChild(word);
+
+    // Play discord notification sound when word spawns
+    engine().audio.sfx.play("main/sounds/discord-notification-sound.mp3", { volume: 0.3 });
   }
 
   /**

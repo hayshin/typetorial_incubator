@@ -11,6 +11,7 @@ import { TabBar } from "../../ui/TabBar";
 import { GameOverScreen } from "../gameover/GameOverScreen";
 import { LevelIntroScreen } from "../levels/LevelIntroScreen";
 import { GameConstants } from "../../data/GameConstants";
+import { Mentor } from "../../entities/Mentor";
 
 /** The screen that holds the app */
 export class MainScreen extends Container {
@@ -26,6 +27,7 @@ export class MainScreen extends Container {
   private wordSpawner!: WordSpawner;
   private gameContainer!: Container;
   private player!: Player;
+  private mentor!: Mentor; // Level 2 mentor entity
 
   // UI elements
   private tabBar!: TabBar;
@@ -85,6 +87,19 @@ export class MainScreen extends Container {
     this.wordSpawner.onWordReachedEdge = this.handleWordReachedEdge.bind(this);
     this.wordSpawner.onWordCompleted = this.handleWordCompleted.bind(this);
     this.wordSpawner.onLevelAdvance = this.handleLevelAdvance.bind(this);
+
+    // Initialize mentor for Level 2 (after word spawner)
+    this.initializeMentor();
+    
+    // Connect mentor spawn position for Level 2 (after mentor is created)
+    if (GameState.getCurrentLevel() === 2 && this.mentor) {
+      this.wordSpawner.getMentorSpawnPosition = () => {
+        return this.mentor.getWordSpawnPosition();
+      };
+      this.wordSpawner.onMentorSpeaking = (speaking: boolean) => {
+        this.setMentorSpeaking(speaking);
+      };
+    }
   }
 
   /** Ensure player is properly positioned on the left side */
@@ -93,6 +108,19 @@ export class MainScreen extends Container {
     const leftMargin = 50; // Distance from left edge
     this.player.x = -GameConstants.GAME_WIDTH / 2 + leftMargin;
     this.player.y = 400; // Center vertically relative to screen
+  }
+
+  /** Initialize mentor for Level 2 */
+  private initializeMentor(): void {
+    // Only show mentor in Level 2
+    if (GameState.getCurrentLevel() === 2) {
+      console.log("MainScreen - Initializing mentor for Level 2");
+      this.mentor = new Mentor();
+      this.mainContainer.addChild(this.mentor);
+      console.log("MainScreen - Mentor added to screen at:", this.mentor.x, this.mentor.y);
+    } else {
+      console.log("MainScreen - Not Level 2, skipping mentor initialization. Current level:", GameState.getCurrentLevel());
+    }
   }
 
   /** Initialize UI elements */
@@ -398,6 +426,11 @@ export class MainScreen extends Container {
     // Position input display at bottom
     this.inputDisplay.x = centerX - 200; // Center the input box
     this.inputDisplay.y = centerY + height / 2 - 80; // 80px from bottom
+
+    // Resize mentor for Level 2
+    if (this.mentor) {
+      this.mentor.resize();
+    }
   }
 
   /** Show screen with animations */
@@ -416,6 +449,16 @@ export class MainScreen extends Container {
   public blur() {
     if (!engine().navigation.currentPopup) {
       engine().navigation.presentPopup(PausePopup);
+    }
+  }
+
+  private setMentorSpeaking(speaking: boolean) {
+    if (this.mentor) {
+      if (speaking) {
+        this.mentor.startSpeaking();
+      } else {
+        this.mentor.stopSpeaking();
+      }
     }
   }
 }

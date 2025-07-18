@@ -14,6 +14,8 @@ const defaultMessageBubbleOptions = {
   senderNameSize: 24,
   messageSize: 24,
   profileSize: 28,
+  level: 1, // Current game level
+  author: "Mentor", // Message author
 };
 
 export type MessageBubbleOptions = typeof defaultMessageBubbleOptions;
@@ -51,6 +53,9 @@ export class MessageBubble extends Container {
   ) {
     super();
     const opts = { ...defaultMessageBubbleOptions, ...options };
+
+    // Apply level-specific styling
+    this.applyLevelSpecificStyling(opts, senderName);
 
     // Create text container
     this.textContainer = new Container();
@@ -183,5 +188,38 @@ export class MessageBubble extends Container {
    */
   public get bubbleHeight(): number {
     return this.background.height;
+  }
+
+  /**
+   * Apply level-specific styling based on game level and author
+   */
+  private applyLevelSpecificStyling(opts: MessageBubbleOptions, senderName: string): void {
+    const level = opts.level || 1;
+    const author = senderName.toLowerCase();
+
+    // Level 2: Special styling for "асель" (speaker)
+    if (level === 2 && author === "асель") {
+      // Speaker-specific styling
+      opts.backgroundColor = 0xff6b6b; // Red background for speaker
+      opts.leftStrokeColor = 0xff0000; // Red stroke
+      opts.leftStrokeWidth = 5; // Thicker stroke
+      opts.cornerRadius = 20; // More rounded corners
+      opts.senderNameColor = 0xffffff; // White text
+      opts.messageColor = 0xffffff; // White text
+      opts.senderNameSize = 28; // Larger name
+      opts.messageSize = 26; // Larger message
+    }
+    
+    // Level 2: Different styling for other authors
+    else if (level === 2) {
+      // Other authors in level 2
+      opts.backgroundColor = 0x2c3e50; // Dark blue background
+      opts.leftStrokeColor = 0x3498db; // Blue stroke
+      opts.leftStrokeWidth = 4; // Medium stroke
+      opts.cornerRadius = 15; // Medium rounded corners
+    }
+    
+    // Level 1: Default styling (already set)
+    // Level 3: Can add boss-specific styling here
   }
 }

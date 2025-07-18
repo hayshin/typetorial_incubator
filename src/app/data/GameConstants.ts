@@ -105,19 +105,22 @@ export class GameConstants {
   // Game difficulty progression
   public static readonly DIFFICULTY_LEVELS = {
     EASY: {
-      wordSpeed: 80,
-      spawnInterval: 3000,
+      wordSpeed: 40,
+      spawnInterval: 5000,
       wordDifficulty: "easy" as const,
+      bossMessagesSpawnInterval: 30000,
     },
     MEDIUM: {
-      wordSpeed: 120,
-      spawnInterval: 2000,
+      wordSpeed: 80,
+      spawnInterval: 4000,
       wordDifficulty: "medium" as const,
+      bossMessagesSpawnInterval: 20000,
     },
     HARD: {
-      wordSpeed: 160,
-      spawnInterval: 1500,
+      wordSpeed: 120,
+      spawnInterval: 3000,
       wordDifficulty: "hard" as const,
+      bossMessagesSpawnInterval: 15000,
     },
   };
 

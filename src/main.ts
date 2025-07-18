@@ -1,6 +1,6 @@
 import { setEngine } from "./app/getEngine";
 import { LoadScreen } from "./app/screens/LoadScreen";
-import { LevelIntroScreen } from "./app/screens/levels/LevelIntroScreen";
+import { StartScreen } from "./app/screens/StartScreen";
 import { userSettings } from "./app/utils/userSettings";
 import { CreationEngine } from "./engine/engine";
 
@@ -26,6 +26,6 @@ setEngine(engine);
 
   // Show the load screen
   await engine.navigation.showScreen(LoadScreen);
-  // Show the level intro screen to start the game
-  await engine.navigation.showScreen(LevelIntroScreen);
+  // Show the start screen with difficulty selection
+  await engine.navigation.showScreen(StartScreen);
 })();

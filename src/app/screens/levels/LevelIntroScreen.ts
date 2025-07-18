@@ -58,7 +58,7 @@ export class LevelIntroScreen extends Container {
 
     // Create title label
     this.titleLabel = new Label({
-      text: "LEVEL 1",
+      text: "УРОВЕНЬ 1",
       style: {
         fontSize: 48,
         fill: 0x4488ff,
@@ -71,7 +71,7 @@ export class LevelIntroScreen extends Container {
 
     // Create description label
     this.descriptionLabel = new Label({
-      text: "Type the incoming messages before they reach you!",
+      text: "Напечатайте входящие сообщения, прежде чем они доберутся до вас!",
       style: {
         fontSize: 20,
         fill: 0xffffff,
@@ -86,7 +86,7 @@ export class LevelIntroScreen extends Container {
 
     // Create subtitle label
     this.subtitleLabel = new Label({
-      text: "Press SPACE to begin",
+      text: "Нажмите ПРОБЕЛ для начала",
       style: {
         fontSize: 18,
         fill: 0xcccccc,
@@ -117,26 +117,27 @@ export class LevelIntroScreen extends Container {
     switch (level) {
       case 1:
         return {
-          title: "LEVEL 1: MESSAGES",
+          title: "УРОВЕНЬ 1: СООБЩЕНИЯ",
           description:
-            "Type the incoming messages before they reach you! Messages will come from the right side of the screen.",
+            "Освойтесь с инкубатором, познакомьтесь с Менторами, выполняйте домашние задания! \nНапечатайте входящие сообщения, прежде чем они доберутся до вас! Сообщения будут появляться с правой стороны экрана.",
         };
       case 2:
         return {
-          title: "LEVEL 2: THE SPEAKER",
+          title: "УРОВЕНЬ 2: ПРОМОУШН",
           description:
-            "A person appears on the right side! Messages now come from their mouth. Type them quickly!",
+            "Вы выбрали идею, но где ваш промоушн? Уклоняйтесь от вопросов главного Ментора! \nСообщения также появляются из его рта. Печатайте их быстро!",
         };
       case 3:
         return {
-          title: "LEVEL 3: BOSS BATTLE",
+          title: "УРОВЕНЬ 3: ПИТЧИНГ",
           description:
-            "Now YOU send messages! Type the text below to attack the boss. Defeat them before they defeat you!",
+            "Пройдете ли вы на Демо Дэй? - Всё решится прямо сейчас! Расскажите свою идею инвестору! \nТеперь ВЫ отправляете сообщения! Напечатайте текст ниже, чтобы уговорить инвестора. Убедите его прежде, чем он откажется от вашей идеи!",
         };
       default:
         return {
-          title: "LEVEL 1: MESSAGES",
-          description: "Type the incoming messages before they reach you!",
+          title: "УРОВЕНЬ 1: СООБЩЕНИЯ",
+          description:
+            "Освойтесь с инкубатором, познакомьтесь с Менторами, выполняйте домашние задания! \nНапечатайте входящие сообщения, прежде чем они доберутся до вас! Сообщения будут появляться с правой стороны экрана.",
         };
     }
   }

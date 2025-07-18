@@ -1,4 +1,4 @@
-import { GameConstants } from "../data/GameConstants";
+import { userSettings } from "../utils/userSettings";
 
 /**
  * Global game state holder for sharing data between screens
@@ -19,6 +19,10 @@ export class GameState {
 
   /** Whether we're transitioning to a new level */
   private static transitioningToLevel: number | null = null;
+
+  /** Current difficulty setting */
+  private static difficulty: "easy" | "medium" | "hard" =
+    userSettings.getDifficulty();
 
   /**
    * Set the final score when game ends
@@ -120,6 +124,21 @@ export class GameState {
   }
 
   /**
+   * Get current difficulty
+   */
+  public static getDifficulty(): "easy" | "medium" | "hard" {
+    return GameState.difficulty;
+  }
+
+  /**
+   * Set current difficulty
+   */
+  public static setDifficulty(difficulty: "easy" | "medium" | "hard"): void {
+    GameState.difficulty = difficulty;
+    userSettings.setDifficulty(difficulty);
+  }
+
+  /**
    * Reset all state
    */
   public static reset(): void {
@@ -129,5 +148,6 @@ export class GameState {
     GameState.currentLevel = 1;
     GameState.levelProgress = 0;
     GameState.transitioningToLevel = null;
+    GameState.difficulty = userSettings.getDifficulty();
   }
 }

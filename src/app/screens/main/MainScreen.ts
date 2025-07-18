@@ -127,6 +127,9 @@ export class MainScreen extends Container {
     this.wordSpawner.onWordCompleted = this.handleWordCompleted.bind(this);
     this.wordSpawner.onLevelAdvance = this.handleLevelAdvance.bind(this);
 
+    // Set difficulty from GameState
+    this.wordSpawner.setDifficulty(GameState.getDifficulty());
+
     // Initialize mentor for Level 2 (after word spawner)
     this.initializeMentor();
 
@@ -655,6 +658,7 @@ export class MainScreen extends Container {
 
     // Reset word spawner for current level and start spawning
     this.wordSpawner.resetForLevel();
+    this.wordSpawner.setDifficulty(GameState.getDifficulty());
     this.wordSpawner.startSpawning();
   }
 

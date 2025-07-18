@@ -55,7 +55,7 @@ export class GameOverScreen extends Container {
 
     // Create title label
     this.titleLabel = new Label({
-      text: "KIIIICK",
+      text: "ПОРАЖЕНИЕ",
       style: {
         fontSize: 48,
         fill: 0xff4444,
@@ -68,7 +68,7 @@ export class GameOverScreen extends Container {
 
     // Create caption label
     this.captionLabel = new Label({
-      text: "minus 200k deposit and minus vibe",
+      text: "Попробуйте ещё раз!",
       style: {
         fontSize: 16,
         fill: 0x888888,
@@ -80,7 +80,7 @@ export class GameOverScreen extends Container {
 
     // Create score label
     this.scoreLabel = new Label({
-      text: "Final Score: 0",
+      text: "Итоговый счёт: 0",
       style: {
         fontSize: 24,
         fill: 0xffffff,
@@ -92,7 +92,7 @@ export class GameOverScreen extends Container {
 
     // Create subtitle label
     this.subtitleLabel = new Label({
-      text: "Press SPACE to try again",
+      text: "Нажмите ПРОБЕЛ, чтобы попробовать снова",
       style: {
         fontSize: 18,
         fill: 0xcccccc,
@@ -171,7 +171,7 @@ export class GameOverScreen extends Container {
   private updateScoreFromGameState(): void {
     if (GameState.hasJustEnded()) {
       const score = GameState.getFinalScore();
-      this.scoreLabel.text = `Final Score: ${score}`;
+      this.scoreLabel.text = `Итоговый счёт: ${score}`;
       GameState.consume();
     }
   }

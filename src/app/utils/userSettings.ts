@@ -5,6 +5,7 @@ import { engine } from "../getEngine";
 const KEY_VOLUME_MASTER = "volume-master";
 const KEY_VOLUME_BGM = "volume-bgm";
 const KEY_VOLUME_SFX = "volume-sfx";
+const KEY_DIFFICULTY = "difficulty";
 
 /**
  * Persistent user settings of volumes.
@@ -14,6 +15,8 @@ class UserSettings {
     engine().audio.setMasterVolume(this.getMasterVolume());
     engine().audio.bgm.setVolume(this.getBgmVolume());
     engine().audio.sfx.setVolume(this.getSfxVolume());
+    // Initialize difficulty setting - this ensures GameState gets the saved value
+    this.getDifficulty();
   }
 
   /** Get overall sound volume */
@@ -47,6 +50,19 @@ class UserSettings {
   public setSfxVolume(value: number) {
     engine().audio.sfx.setVolume(value);
     storage.setNumber(KEY_VOLUME_SFX, value);
+  }
+
+  /** Get game difficulty */
+  public getDifficulty(): "easy" | "medium" | "hard" {
+    return (
+      (storage.getString(KEY_DIFFICULTY) as "easy" | "medium" | "hard") ??
+      "easy"
+    );
+  }
+
+  /** Set game difficulty */
+  public setDifficulty(value: "easy" | "medium" | "hard") {
+    storage.setString(KEY_DIFFICULTY, value);
   }
 }
 

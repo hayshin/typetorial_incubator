@@ -1,12 +1,6 @@
 import { List } from "@pixi/ui";
 import { animate } from "motion";
-import {
-  BlurFilter,
-  Container,
-  Sprite,
-  Text,
-  Texture,
-} from "pixi.js";
+import { BlurFilter, Container, Sprite, Text, Texture } from "pixi.js";
 
 import { engine } from "../getEngine";
 import { Label } from "../ui/Label";
@@ -52,7 +46,7 @@ export class SettingsPopup extends Container {
     this.panel.addChild(this.panelBase);
 
     this.title = new Text({
-      text: "SETTINGS",
+      text: "НАСТРОЙКИ",
       style: {
         fontSize: 50,
         fill: 0x111111,
@@ -82,7 +76,7 @@ export class SettingsPopup extends Container {
     this.panel.addChild(this.doneButton);
 
     this.versionLabel = new Label({
-      text: `Version ${APP_VERSION}`,
+      text: `Версия ${APP_VERSION}`,
       style: {
         fill: 0x111111,
         fontSize: 12,
@@ -97,19 +91,19 @@ export class SettingsPopup extends Container {
     this.layout.y = -80;
     this.panel.addChild(this.layout);
 
-    this.masterSlider = new VolumeSlider("Master Volume");
+    this.masterSlider = new VolumeSlider("Общая громкость");
     this.masterSlider.onUpdate.connect((v) => {
       userSettings.setMasterVolume(v / 100);
     });
     this.layout.addChild(this.masterSlider);
 
-    this.bgmSlider = new VolumeSlider("BGM Volume");
+    this.bgmSlider = new VolumeSlider("Громкость музыки");
     this.bgmSlider.onUpdate.connect((v) => {
       userSettings.setBgmVolume(v / 100);
     });
     this.layout.addChild(this.bgmSlider);
 
-    this.sfxSlider = new VolumeSlider("SFX Volume");
+    this.sfxSlider = new VolumeSlider("Громкость звуков");
     this.sfxSlider.onUpdate.connect((v) => {
       userSettings.setSfxVolume(v / 100);
     });

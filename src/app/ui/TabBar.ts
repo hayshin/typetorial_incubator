@@ -1,9 +1,9 @@
 import { Container, Graphics } from "pixi.js";
-import { Label } from "./Label";
-import { engine } from "../getEngine";
 import { PausePopup } from "../../app/popups/PausePopup";
 import { SettingsPopup } from "../../app/popups/SettingsPopup";
 import { GameConstants } from "../data/GameConstants";
+import { engine } from "../getEngine";
+import { Label } from "./Label";
 
 /**
  * Tab bar component for game UI elements
@@ -59,11 +59,9 @@ export class TabBar extends Container {
     this.elements.addChild(this.stopButton);
     currentX += this.stopButton.width + elementSpacing;
 
-
-
     // Score display
     this.scoreDisplay = new Label({
-      text: "Score: 0",
+      text: "Счёт: 0",
       style: {
         fontFamily: GameConstants.FONT_FAMILY,
         fontSize: 16,
@@ -77,7 +75,7 @@ export class TabBar extends Container {
 
     // Lives display
     this.livesDisplay = new Label({
-      text: "Lives: 3",
+      text: "Жизни: 3",
       style: {
         fontFamily: GameConstants.FONT_FAMILY,
         fontSize: 16,
@@ -91,7 +89,7 @@ export class TabBar extends Container {
 
     // Level display
     this.levelDisplay = new Label({
-      text: "Level: 1",
+      text: "Уровень: 1",
       style: {
         fontFamily: GameConstants.FONT_FAMILY,
         fontSize: 16,
@@ -105,7 +103,7 @@ export class TabBar extends Container {
 
     // Progress display
     this.progressDisplay = new Label({
-      text: "Progress: 0%",
+      text: "Прогресс: 0%",
       style: {
         fontFamily: GameConstants.FONT_FAMILY,
         fontSize: 16,
@@ -134,34 +132,32 @@ export class TabBar extends Container {
     this.elements.addChild(this.settingsButton);
   }
 
-
-
   /**
    * Update score display
    */
   public updateScore(score: number): void {
-    this.scoreDisplay.text = `Score: ${score}`;
+    this.scoreDisplay.text = `Счёт: ${score}`;
   }
 
   /**
    * Update lives display
    */
   public updateLives(lives: number): void {
-    this.livesDisplay.text = `Lives: ${lives}`;
+    this.livesDisplay.text = `Жизни: ${lives}`;
   }
 
   /**
    * Update level display
    */
   public updateLevel(level: number): void {
-    this.levelDisplay.text = `Level: ${level}`;
+    this.levelDisplay.text = `Уровень: ${level}`;
   }
 
   /**
    * Update progress display
    */
   public updateProgress(progress: number): void {
-    this.progressDisplay.text = `Progress: ${Math.round(progress)}%`;
+    this.progressDisplay.text = `Прогресс: ${Math.round(progress)}%`;
   }
 
   /**

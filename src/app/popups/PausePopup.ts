@@ -1,11 +1,5 @@
 import { animate } from "motion";
-import {
-  BlurFilter,
-  Container,
-  Sprite,
-  Text,
-  Texture,
-} from "pixi.js";
+import { BlurFilter, Container, Sprite, Text, Texture } from "pixi.js";
 
 import { engine } from "../getEngine";
 import { Label } from "../ui/Label";
@@ -39,7 +33,7 @@ export class PausePopup extends Container {
     this.panel.addChild(this.panelBase);
 
     this.title = new Label({
-      text: "Paused",
+      text: "Пауза",
       style: { fill: 0x111111, fontSize: 50 },
     });
     this.title.y = -80;

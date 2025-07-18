@@ -67,7 +67,7 @@ export class VictoryScreen extends Container {
 
     // Create message label
     this.messageLabel = new Label({
-      text: "Поздравляем! Вы успешно завершили инкубатор\nи победили финального босса!",
+      text: "Поздравляем! Вы успешно завершили инкубатор и прошли DEMODAY!!!\n+ vibe, +aura, +startup, +experience, +friends, +deposit, +knowledges, +internship  !",
       style: {
         fontSize: 24,
         fill: 0xffffff,

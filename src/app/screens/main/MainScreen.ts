@@ -1,20 +1,25 @@
-import { FancyButton } from "@pixi/ui";
-import { animate } from "motion";
-import type { AnimationPlaybackControls } from "motion/react";
 import type { Ticker } from "pixi.js";
-import { Container } from "pixi.js";
+import {
+  BlurFilter,
+  Container,
+  Graphics,
+  Sprite,
+  Text,
+  Texture,
+} from "pixi.js";
 import { GameState } from "../../core/GameState";
 import { InputManager } from "../../core/InputManager";
+import { GameConstants } from "../../data/GameConstants";
 import { Level3TextManager } from "../../data/Level3TextManager";
 import { Boss } from "../../entities/Boss";
 import { Player } from "../../entities/Player";
 import type { Word } from "../../entities/Word";
 import { engine } from "../../getEngine";
 import { PausePopup } from "../../popups/PausePopup";
-import { SettingsPopup } from "../../popups/SettingsPopup";
 import { WordSpawner } from "../../systems/WordSpawner";
 import { Label } from "../../ui/Label";
 import { ProgressBar } from "../../ui/ProgressBar";
+import { TabBar } from "../../ui/TabBar";
 import { TypingTextDisplay } from "../../ui/TypingTextDisplay";
 import { GameOverScreen } from "../gameover/GameOverScreen";
 import { LevelIntroScreen } from "../levels/LevelIntroScreen";
@@ -26,8 +31,7 @@ export class MainScreen extends Container {
   public static assetBundles = ["main"];
 
   public mainContainer: Container;
-  private pauseButton: FancyButton;
-  private settingsButton: FancyButton;
+  private backgroundSprite: Sprite;
   private paused = false;
 
   // Game components
@@ -48,6 +52,11 @@ export class MainScreen extends Container {
   private typingTextDisplay!: TypingTextDisplay;
   private boss!: Boss;
   private currentBossText: string = "";
+  private tabBar!: TabBar;
+  private inputDisplay!: Container;
+  private inputBackground!: Graphics;
+  private inputText!: Text;
+  private textCursor!: Graphics;
 
   // Game state
   private score: number = 0;
@@ -60,46 +69,22 @@ export class MainScreen extends Container {
   constructor() {
     super();
 
+    // Create background sprite
+    this.backgroundSprite = new Sprite(Texture.from("background_main.png"));
+    this.backgroundSprite.anchor.set(0.5);
+
+    // Add blur filter to background
+    const blurFilter = new BlurFilter(9); // Blur strength: 2 (adjust as needed)
+    this.backgroundSprite.filters = [blurFilter];
+
+    this.addChild(this.backgroundSprite);
+
     this.mainContainer = new Container();
     this.addChild(this.mainContainer);
 
     // Initialize game components
     this.initGame();
     this.initUI();
-
-    const buttonAnimations = {
-      hover: {
-        props: {
-          scale: { x: 1.1, y: 1.1 },
-        },
-        duration: 100,
-      },
-      pressed: {
-        props: {
-          scale: { x: 0.9, y: 0.9 },
-        },
-        duration: 100,
-      },
-    };
-    this.pauseButton = new FancyButton({
-      defaultView: "icon-pause.png",
-      anchor: 0.5,
-      animations: buttonAnimations,
-    });
-    this.pauseButton.onPress.connect(() =>
-      engine().navigation.presentPopup(PausePopup),
-    );
-    this.addChild(this.pauseButton);
-
-    this.settingsButton = new FancyButton({
-      defaultView: "icon-settings.png",
-      anchor: 0.5,
-      animations: buttonAnimations,
-    });
-    this.settingsButton.onPress.connect(() =>
-      engine().navigation.presentPopup(SettingsPopup),
-    );
-    this.addChild(this.settingsButton);
   }
 
   /** Initialize game components */
@@ -120,6 +105,8 @@ export class MainScreen extends Container {
 
     console.log(`Player initialized at: (${this.player.x}, ${this.player.y})`);
     console.log(`MainContainer will be positioned at center during resize`);
+    // Ensure player is properly positioned
+    this.ensurePlayerPosition();
 
     // Initialize input manager
     this.inputManager = new InputManager();
@@ -134,18 +121,20 @@ export class MainScreen extends Container {
     this.wordSpawner.onLevelAdvance = this.handleLevelAdvance.bind(this);
   }
 
+  /** Ensure player is properly positioned on the left side */
+  private ensurePlayerPosition(): void {
+    // Make sure player is visible and on the left side
+    const leftMargin = 50; // Distance from left edge
+    this.player.x = -GameConstants.GAME_WIDTH / 2 + leftMargin;
+    this.player.y = 400; // Center vertically relative to screen
+  }
+
   /** Initialize UI elements */
   private initUI(): void {
-    // Current input display
-    this.currentInputDisplay = new Label({
-      text: "",
-      style: {
-        fontSize: 24,
-        fill: 0x00ff00,
-      },
-    });
-    this.currentInputDisplay.y = 50;
-    this.addChild(this.currentInputDisplay);
+    // Create tab bar
+    this.tabBar = new TabBar();
+    this.tabBar.y = 20; // Position at top of screen
+    this.addChild(this.tabBar);
 
     // Score display
     this.scoreDisplay = new Label({
@@ -199,6 +188,8 @@ export class MainScreen extends Container {
     this.typingTextDisplay = new TypingTextDisplay();
     this.typingTextDisplay.visible = false; // Hidden by default
     this.mainContainer.addChild(this.typingTextDisplay);
+    // Create input display at bottom
+    this.createInputDisplay();
   }
 
   /** Handle character typed */
@@ -381,18 +372,58 @@ export class MainScreen extends Container {
   private shootBullet(): void {
     const activeWord = this.wordSpawner.getActiveWord();
     if (activeWord && !activeWord.isCompleted) {
-      console.log(`Active word position: (${activeWord.x}, ${activeWord.y})`);
-      console.log(`Player position: (${this.player.x}, ${this.player.y})`);
-      console.log(
-        `MainContainer position: (${this.mainContainer.x}, ${this.mainContainer.y})`,
-      );
       this.player.shootBullet();
     }
   }
 
+  /** Create input display at bottom */
+  private createInputDisplay(): void {
+    this.inputDisplay = new Container();
+    this.addChild(this.inputDisplay);
+
+    // Create white background
+    this.inputBackground = new Graphics()
+      .roundRect(0, 0, 400, 50, 8)
+      .fill({ color: 0xffffff });
+    this.inputDisplay.addChild(this.inputBackground);
+
+    // Create input text
+    this.inputText = new Text({
+      text: "Type here...",
+      style: {
+        fontFamily: GameConstants.FONT_FAMILY,
+        fontSize: 18,
+        fill: 0x000000,
+      },
+    });
+    this.inputText.x = 15;
+    this.inputText.y = 15;
+    this.inputDisplay.addChild(this.inputText);
+
+    // Create blinking cursor
+    this.textCursor = new Graphics()
+      .rect(0, 0, 2, 20)
+      .fill({ color: 0x000000 });
+    this.textCursor.x = 15;
+    this.textCursor.y = 15;
+    this.inputDisplay.addChild(this.textCursor);
+
+    // Start cursor blinking animation
+    this.startCursorBlink();
+  }
+
+  /** Start cursor blinking animation */
+  private startCursorBlink(): void {
+    let visible = true;
+    setInterval(() => {
+      this.textCursor.visible = visible;
+      visible = !visible;
+    }, 500);
+  }
+
   /** Update input display */
   private updateInputDisplay(): void {
-    let displayText = `Input: ${this.currentInput}`;
+    let displayText = this.currentInput || "Type here...";
 
     // Add visual feedback for wrong character
     if (this.wrongCharHighlight) {
@@ -403,11 +434,10 @@ export class MainScreen extends Container {
       }
     }
 
-    this.currentInputDisplay.text = displayText;
-    // Change color based on wrong character highlight
-    this.currentInputDisplay.style.fill = this.wrongCharHighlight
-      ? 0xff0000
-      : 0x00ff00;
+    this.inputText.text = displayText;
+
+    // Update cursor position
+    this.textCursor.x = 15 + this.inputText.width;
   }
 
   /** Handle word reaching edge */
@@ -447,17 +477,17 @@ export class MainScreen extends Container {
 
   /** Update score display */
   private updateScoreDisplay(): void {
-    this.scoreDisplay.text = `Score: ${this.score}`;
+    this.tabBar.updateScore(this.score);
   }
 
   /** Update lives display */
   private updateLivesDisplay(): void {
-    this.livesDisplay.text = `Lives: ${this.lives}`;
+    this.tabBar.updateLives(this.lives);
   }
 
   /** Update level display */
   private updateLevelDisplay(): void {
-    this.levelDisplay.text = `Level: ${GameState.getCurrentLevel()}`;
+    this.tabBar.updateLevel(GameState.getCurrentLevel());
   }
 
   /** Update progress display */
@@ -495,6 +525,7 @@ export class MainScreen extends Container {
         this.totalMessagesInLevel,
       );
     }
+    // this.tabBar.updateProgress(progress);
   }
 
   /** Game over */
@@ -588,17 +619,19 @@ export class MainScreen extends Container {
     const centerX = width * 0.5;
     const centerY = height * 0.5;
 
+    // Resize and position background
+    this.backgroundSprite.x = centerX;
+    this.backgroundSprite.y = centerY;
+    this.backgroundSprite.width = width;
+    this.backgroundSprite.height = height;
+
     this.mainContainer.x = centerX;
     this.mainContainer.y = centerY;
 
-    console.log(
-      `Screen resized to ${width}x${height}, mainContainer positioned at (${centerX}, ${centerY})`,
-    );
-    console.log(`Player local position: (${this.player.x}, ${this.player.y})`);
-    this.pauseButton.x = 30;
-    this.pauseButton.y = 30;
-    this.settingsButton.x = width - 30;
-    this.settingsButton.y = 30;
+    // Ensure player is properly positioned after resize
+    this.ensurePlayerPosition();
+    this.tabBar.resize(width - 60); // Leave margin for pause/settings buttons
+    this.tabBar.x = 30; // Align with pause button
 
     // Position UI elements
     this.currentInputDisplay.x = 50;
@@ -612,6 +645,9 @@ export class MainScreen extends Container {
 
     // Resize progress bar
     this.progressBar.resize(width, height);
+    // Position input display at bottom
+    this.inputDisplay.x = centerX - 200; // Center the input box
+    this.inputDisplay.y = centerY + height / 2 - 80; // 80px from bottom
   }
 
   /** Show screen with animations */

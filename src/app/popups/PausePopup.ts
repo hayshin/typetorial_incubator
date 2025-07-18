@@ -1,8 +1,13 @@
 import { animate } from "motion";
-import { BlurFilter, Container, Sprite, Texture } from "pixi.js";
+import {
+  BlurFilter,
+  Container,
+  Sprite,
+  Text,
+  Texture,
+} from "pixi.js";
 
 import { engine } from "../getEngine";
-import { Button } from "../ui/Button";
 import { Label } from "../ui/Label";
 import { RoundedBox } from "../ui/RoundedBox";
 
@@ -15,7 +20,7 @@ export class PausePopup extends Container {
   /** The popup title label */
   private title: Label;
   /** Button that closes the popup */
-  private doneButton: Button;
+  private doneButton: Text;
   /** The panel background */
   private panelBase: RoundedBox;
 
@@ -35,14 +40,26 @@ export class PausePopup extends Container {
 
     this.title = new Label({
       text: "Paused",
-      style: { fill: 0xec1561, fontSize: 50 },
+      style: { fill: 0x111111, fontSize: 50 },
     });
     this.title.y = -80;
     this.panel.addChild(this.title);
 
-    this.doneButton = new Button({ text: "Resume" });
-    this.doneButton.y = 70;
-    this.doneButton.onPress.connect(() => engine().navigation.dismissPopup());
+    // Create text button (▶️ RESUME)
+    this.doneButton = new Text({
+      text: "▶️",
+      style: {
+        fontSize: 80,
+        fill: 0x111111,
+        fontWeight: "bold",
+        align: "center",
+      },
+    });
+    this.doneButton.anchor.set(0.5);
+    this.doneButton.y = 60;
+    this.doneButton.eventMode = "static";
+    this.doneButton.cursor = "pointer";
+    this.doneButton.on("pointerup", () => engine().navigation.dismissPopup());
     this.panel.addChild(this.doneButton);
   }
 

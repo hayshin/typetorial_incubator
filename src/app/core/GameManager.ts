@@ -180,7 +180,7 @@ export class GameManager {
   /**
    * Handle word reaching edge
    */
-  private handleWordReachedEdge(_word: Word): void {
+  private handleWordReachedEdge(): void {
     this.stats.wordsLost++;
     this.loseLife();
   }

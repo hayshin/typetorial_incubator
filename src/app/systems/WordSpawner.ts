@@ -1,7 +1,6 @@
 import type { Container } from "pixi.js";
 import { GameState } from "../core/GameState";
 import { GameConstants } from "../data/GameConstants";
-import { Level3TextManager } from "../data/Level3TextManager";
 import {
   MessageDictionary,
   type MessageEntry,
@@ -107,7 +106,10 @@ export class WordSpawner {
     this.updateLevelProgress();
 
     const speed = this.getSpeedForDifficulty();
-    const word = new Word(messageEntry.text, speed);
+
+    const word = new Word(messageEntry.text, speed, messageEntry.author);
+
+    // const word = new Word(messageEntry.text, speed);
 
     // Set spawn position based on level and author
     const spawnPosition = this.getSpawnPosition(messageEntry);
@@ -345,7 +347,7 @@ export class WordSpawner {
   }
 
   /**
-   * Set custom spawn interval
+   * Set spawn interval
    */
   public setSpawnInterval(interval: number): void {
     this.spawnInterval = interval;
@@ -359,11 +361,14 @@ export class WordSpawner {
   }
 
   /**
-   * Force spawn a specific word (for testing)
+   * Spawn a specific word (for testing or special events)
    */
-  public spawnSpecificWord(text: string): Word {
+  public spawnSpecificWord(text: string, author?: string): Word {
     const speed = this.getSpeedForDifficulty();
-    const word = new Word(text, speed);
+    const word = new Word(text, speed, author || "Mentor");
+
+    word.x = GameConstants.WORD_SPAWN_X;
+    word.y = this.getRandomSpawnY();
 
     this.activeWords.push(word);
     this.container.addChild(word);
@@ -397,12 +402,9 @@ export class WordSpawner {
         this.remainingMessages.map((msg) => msg.text),
       );
     } else if (currentLevel === 3) {
-      // Level 3 uses boss battle texts
-      const bossText = Level3TextManager.getRandomText();
-      console.log("WordSpawner - Level 3 boss text:", bossText.text);
-      // For level 3, we don't use remainingMessages the same way
+      // Level 3 - for now, use empty messages
       this.remainingMessages = [];
-      this.totalMessages = 1; // One boss text to complete
+      this.totalMessages = 0;
     } else {
       // Fallback
       this.remainingMessages = [];
@@ -414,14 +416,12 @@ export class WordSpawner {
   }
 
   /**
-   * Update level progress based on remaining messages
+   * Update level progress
    */
   private updateLevelProgress(): void {
-    if (this.totalMessages > 0) {
-      const completed = this.totalMessages - this.remainingMessages.length;
-      const progress = (completed / this.totalMessages) * 100;
-      GameState.setLevelProgress(progress);
-    }
+    const completed = this.totalMessages - this.remainingMessages.length;
+    const progress = (completed / this.totalMessages) * 100;
+    GameState.setLevelProgress(progress);
   }
 
   /**
@@ -449,11 +449,12 @@ export class WordSpawner {
   }
 
   /**
-   * Reset for new level
+   * Reset spawner for new level
    */
   public resetForLevel(): void {
     this.clearAllWords();
     this.initializeLevel();
+    this.spawnTimer = 0;
   }
 
   /**
@@ -471,21 +472,9 @@ export class WordSpawner {
   }
 
   /**
-   * Get current boss text for level 3
-   */
-  public getCurrentBossText(): string {
-    const currentLevel = GameState.getCurrentLevel();
-    if (currentLevel === 3) {
-      return Level3TextManager.getRandomText().text;
-    }
-    return "";
-  }
-
-  /**
-   * Cleanup - remove all words and stop spawning
+   * Destroy the spawner
    */
   public destroy(): void {
-    this.stopSpawning();
     this.clearAllWords();
   }
 }

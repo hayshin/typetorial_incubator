@@ -171,11 +171,28 @@ export class Word extends Container {
     this.isActive = active;
 
     if (active) {
-      // Slightly scale up when active, but don't change color
+      // Bring this word to front so it's visible above all others
+      this.bringToFront();
+      // Slightly scale up when active and make fully opaque
       this.scale.set(1.1, 1.1);
+      // this.alpha = 1.0;
     } else {
-      // Return to normal state
+      // Return to normal state with slightly reduced opacity
       this.scale.set(1, 1);
+      // this.alpha = 0.8;
+    }
+  }
+
+  /**
+   * Bring this word to the front (top layer) above all other words
+   */
+  public bringToFront(): void {
+    if (this.parent) {
+      // Remove from current position and add back at the end
+      // This ensures it's on the topmost layer
+      const parent = this.parent;
+      parent.removeChild(this);
+      parent.addChild(this);
     }
   }
 

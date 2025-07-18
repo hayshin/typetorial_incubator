@@ -22,8 +22,6 @@ export class Player extends Container {
   private currentTarget: Word | null = null;
 
   /** Player's position on the left side of the screen */
-  private playerX: number;
-  private playerY: number;
 
   /** Player size */
   private playerSize: number = 400; // Increased for image sprites
@@ -35,19 +33,18 @@ export class Player extends Container {
     super();
 
     // Set player position (middle of left edge)
-    this.playerX = GameConstants.PLAYER_X;
-    this.playerY = 0; // Middle of screen
 
     // Create bullet container
     this.bulletContainer = new Container();
     this.addChild(this.bulletContainer);
 
+    // Position player (ensure it stays within screen bounds)
+    const minPlayerX = -GameConstants.GAME_WIDTH / 2 + this.playerSize / 2;
+    this.x = Math.max(GameConstants.PLAYER_X, minPlayerX) + 500;
+    this.y = 0;
+
     // Create player graphics
     this.createPlayerGraphics();
-
-    // Position player
-    this.x = this.playerX;
-    this.y = this.playerY;
   }
 
   /**
@@ -56,13 +53,13 @@ export class Player extends Container {
   private createPlayerGraphics(): void {
     // Create default state sprite
     this.playerDefaultSprite = new Sprite(Texture.from("main/player/0.PNG"));
-    this.playerDefaultSprite.anchor.set(0.5);
+    this.playerDefaultSprite.anchor.set(0.5, 1);
     this.playerDefaultSprite.width = this.playerSize;
     this.playerDefaultSprite.height = this.playerSize;
 
     // Create keyboard state sprite
     this.playerKeyboardSprite = new Sprite(Texture.from("main/player/1.PNG"));
-    this.playerKeyboardSprite.anchor.set(0.5);
+    this.playerKeyboardSprite.anchor.set(0.5, 1);
     this.playerKeyboardSprite.width = this.playerSize;
     this.playerKeyboardSprite.height = this.playerSize;
     this.playerKeyboardSprite.visible = false;

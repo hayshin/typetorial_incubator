@@ -3,16 +3,20 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "homepage": "https://yourusername.github.io/typetorial_incubator",
   "scripts": {
     "start": "npm run dev",
     "build": "npm run lint && tsc && vite build",
     "lint": "eslint .",
-    "dev": "vite"
+    "dev": "vite",
+    "deploy": "npm run build && gh-pages -d dist",
+    "predeploy": "npm run build"
   },
   "dependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.74",
     "@pixi/sound": "^6.0.1",
     "@pixi/ui": "^2.2.2",
+    "gh-pages": "^6.3.0",
     "motion": "^12.4.7",
     "pixi.js": "^8.8.1"
   },

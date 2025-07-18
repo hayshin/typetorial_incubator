@@ -6,9 +6,6 @@ export class InputManager {
   /** Callback for when a valid character is typed */
   public onCharacterTyped?: (char: string) => void;
 
-  /** Callback for when backspace is pressed */
-  public onBackspace?: () => void;
-
   /** Callback for when enter is pressed */
   public onEnter?: () => void;
 
@@ -17,51 +14,6 @@ export class InputManager {
 
   /** Whether input is currently enabled */
   private isEnabled: boolean = true;
-
-  /** Set of valid Russian characters and common punctuation */
-  private readonly validChars = new Set([
-    "а",
-    "б",
-    "в",
-    "г",
-    "д",
-    "е",
-    "ё",
-    "ж",
-    "з",
-    "и",
-    "й",
-    "к",
-    "л",
-    "м",
-    "н",
-    "о",
-    "п",
-    "р",
-    "с",
-    "т",
-    "у",
-    "ф",
-    "х",
-    "ц",
-    "ч",
-    "ш",
-    "щ",
-    "ъ",
-    "ы",
-    "ь",
-    "э",
-    "ю",
-    "я",
-    " ", // space
-    ".", // period
-    ",", // comma
-    "?", // question mark
-    "!", // exclamation mark
-    "-", // dash
-    ":", // colon
-    ";", // semicolon
-  ]);
 
   constructor() {
     this.setupKeyboardListeners();
@@ -91,13 +43,6 @@ export class InputManager {
     const key = event.key.toLowerCase();
 
     // Handle special keys
-    if (key === "backspace") {
-      if (this.onBackspace) {
-        this.onBackspace();
-      }
-      return;
-    }
-
     if (key === "enter") {
       if (this.onEnter) {
         this.onEnter();
@@ -124,19 +69,15 @@ export class InputManager {
    * Check if character is valid for typing
    */
   private isValidCharacter(char: string): boolean {
-    return this.validChars.has(char.toLowerCase());
+    // Allow all printable characters (length 1) except control characters
+    return char.length === 1 && char.charCodeAt(0) >= 32;
   }
 
   /**
    * Check if key should be handled by the game
    */
   private isGameKey(key: string): boolean {
-    return (
-      this.isValidCharacter(key) ||
-      key === "Backspace" ||
-      key === "Enter" ||
-      key === "Escape"
-    );
+    return this.isValidCharacter(key) || key === "Enter" || key === "Escape";
   }
 
   /**

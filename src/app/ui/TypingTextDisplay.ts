@@ -1,4 +1,4 @@
-import { Container, HTMLText } from "pixi.js";
+import { Container, Graphics, HTMLText } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
 
 /**
@@ -18,14 +18,20 @@ export class TypingTextDisplay extends Container {
   /** Whether the current character is wrong */
   private hasWrongCharacter: boolean = false;
 
-  /** Background container for styling */
-  private background: Container;
+  /** Background graphics for styling */
+  private background: Graphics;
+
+  /** Padding for the text display */
+  private padding: number = 20;
+
+  /** Maximum width for the display */
+  private maxWidth: number = 600;
 
   constructor() {
     super();
 
-    // Create background container
-    this.background = new Container();
+    // Create background graphics
+    this.background = new Graphics();
     this.addChild(this.background);
 
     // Create text display with HTML support for colors
@@ -33,14 +39,14 @@ export class TypingTextDisplay extends Container {
       text: "",
       style: {
         fontFamily: "Arial",
-        fontSize: 24,
+        fontSize: 20,
         fill: 0xffffff,
         wordWrap: true,
-        wordWrapWidth: 800,
-        align: "left",
+        wordWrapWidth: this.maxWidth - this.padding * 2,
+        align: "center",
       },
     });
-    this.textDisplay.anchor.set(0, 0.5); // Left-aligned, vertically centered
+    this.textDisplay.anchor.set(0.5, 0.5);
     this.addChild(this.textDisplay);
 
     this.updateDisplay();
@@ -163,6 +169,7 @@ export class TypingTextDisplay extends Container {
   private updateDisplay(): void {
     if (this.fullText.length === 0) {
       this.textDisplay.text = "";
+      this.updateBackground();
       return;
     }
 
@@ -182,8 +189,8 @@ export class TypingTextDisplay extends Container {
       const nextChar = remainingText[0];
       const restOfText = remainingText.slice(1);
 
-      // Next character - red if wrong, white if normal
-      const nextCharColor = this.hasWrongCharacter ? "#ff0000" : "#ffffff";
+      // Next character - red if wrong, yellow if normal (highlighted)
+      const nextCharColor = this.hasWrongCharacter ? "#ff0000" : "#ffff00";
       htmlText += `<span style="color: ${nextCharColor}">${this.escapeHtml(nextChar)}</span>`;
 
       // Rest of the text in white
@@ -193,6 +200,42 @@ export class TypingTextDisplay extends Container {
     }
 
     this.textDisplay.text = htmlText;
+    this.updateBackground();
+  }
+
+  /**
+   * Update the background graphics
+   */
+  private updateBackground(): void {
+    this.background.clear();
+
+    if (this.fullText.length === 0) {
+      return;
+    }
+
+    // Calculate bubble dimensions based on text
+    const textBounds = this.textDisplay.getBounds();
+    const bubbleWidth = Math.min(
+      textBounds.width + this.padding * 2,
+      this.maxWidth,
+    );
+    const bubbleHeight = textBounds.height + this.padding * 2;
+
+    // Create background with rounded corners (MessageBubble style)
+    this.background
+      .roundRect(
+        -bubbleWidth / 2,
+        -bubbleHeight / 2,
+        bubbleWidth,
+        bubbleHeight,
+        12,
+      )
+      .fill({ color: 0x1c1d22 });
+
+    // Add yellow stroke on left side (MessageBubble style)
+    this.background
+      .roundRect(-bubbleWidth / 2, -bubbleHeight / 2, 3, bubbleHeight, 12)
+      .fill({ color: 0xffff00 });
   }
 
   /**
@@ -211,8 +254,8 @@ export class TypingTextDisplay extends Container {
    * Position the display
    */
   public resize(width: number, height: number): void {
-    this.x = -width * 0.4; // Position to the left of center
-    this.y = GameConstants.TYPING_TEXT_Y;
+    this.x = width / 2; // Center horizontally
+    this.y = height - 100; // Position near bottom with some margin
   }
 
   /**

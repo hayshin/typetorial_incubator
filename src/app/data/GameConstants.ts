@@ -79,6 +79,9 @@ export class GameConstants {
   public static readonly WORD_SPAWN_INTERVAL = 2000;
   public static readonly PLAYER_LIVES = 3;
 
+  // Game configuration
+  public static readonly DEFAULT_LEVEL: 1 | 2 | 3 = 3;
+
   // Typing settings
   public static readonly TYPING_TYPED_COLOR = 0x888888;
   public static readonly TYPING_ERROR_COLOR = 0xff0000;

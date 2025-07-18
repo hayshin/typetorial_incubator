@@ -4,6 +4,7 @@ import { Container, Sprite, Texture } from "pixi.js";
 
 import { GameState } from "../../core/GameState";
 import { InputManager } from "../../core/InputManager";
+import { GameConstants } from "../../data/GameConstants";
 import { engine } from "../../getEngine";
 import { Label } from "../../ui/Label";
 import { RoundedBox } from "../../ui/RoundedBox";
@@ -100,7 +101,7 @@ export class LevelIntroScreen extends Container {
     this.inputManager.setEnabled(false); // Will be enabled when screen is shown
 
     // Set default level info
-    this.levelInfo = this.getLevelInfo(1);
+    this.levelInfo = this.getLevelInfo(GameConstants.DEFAULT_LEVEL);
 
     // Add blinking animation to subtitle
     this.addBlinkingEffect();

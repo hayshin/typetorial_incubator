@@ -1,3 +1,5 @@
+import { GameConstants } from "../data/GameConstants";
+
 /**
  * Global game state holder for sharing data between screens
  * Used to pass game information like final score to different screens
@@ -10,7 +12,7 @@ export class GameState {
   private static justEnded: boolean = false;
 
   /** Current level (1, 2, or 3) */
-  private static currentLevel: 1 | 2 | 3 = 1;
+  private static currentLevel: 1 | 2 | 3 = GameConstants.DEFAULT_LEVEL;
 
   /** Current progress within the level (0-100) */
   private static levelProgress: number = 0;
@@ -124,7 +126,7 @@ export class GameState {
     console.log("GameState - reset called");
     GameState.finalScore = 0;
     GameState.justEnded = false;
-    GameState.currentLevel = 1;
+    GameState.currentLevel = GameConstants.DEFAULT_LEVEL;
     GameState.levelProgress = 0;
     GameState.transitioningToLevel = null;
   }

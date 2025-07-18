@@ -1,6 +1,5 @@
 import { Container } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
-import { GameState } from "../core/GameState";
 import { MessageBubble } from "../ui/MessageBubble";
 
 /**
@@ -39,10 +38,14 @@ export class Word extends Container {
   /** Whether this is a player message (moves right) */
   private isPlayerMessage: boolean = false;
 
+  /** Whether the current character is wrong */
+  private hasWrongCharacter: boolean = false;
+
   constructor(text: string, speed?: number, author?: string) {
     // constructor(text: string, speed?: number) {
     super();
 
+    console.log("Word - constructor called with:", { text, speed, author });
     this.targetText = text.toLowerCase();
     this.speed = speed || GameConstants.WORD_SPEED;
 
@@ -59,8 +62,6 @@ export class Word extends Container {
         maxWidth: GameConstants.MESSAGE_MAX_WIDTH,
         messageSize: 20,
         senderNameSize: 20,
-        level: GameState.getCurrentLevel(), // Pass current level
-        author: author || "Mentor", // Pass author for styling
       },
     );
 
@@ -73,6 +74,8 @@ export class Word extends Container {
     // Start from right side of screen
     this.x = GameConstants.WORD_SPAWN_X;
     this.y = this.getRandomSpawnY();
+
+    console.log("Word - created and positioned at:", this.x, this.y);
 
     // Fade in animation
     this.alpha = 0;
@@ -147,6 +150,7 @@ export class Word extends Container {
 
     if (typedChar === expectedChar) {
       this.typedProgress++;
+      this.hasWrongCharacter = false;
       this.updateMessageDisplay();
 
       // Check if word is completed
@@ -157,6 +161,8 @@ export class Word extends Container {
       return true;
     } else {
       // Wrong character - show error state
+      this.hasWrongCharacter = true;
+      this.updateMessageDisplay();
       this.showError();
       return false;
     }
@@ -217,6 +223,8 @@ export class Word extends Container {
     setTimeout(() => {
       this.scale.set(1, 1);
       this.messageBubble.background.tint = originalBgColor;
+      this.hasWrongCharacter = false;
+      this.updateMessageDisplay();
     }, 100);
   }
 
@@ -224,8 +232,15 @@ export class Word extends Container {
    * Update message display to show typing progress
    */
   private updateMessageDisplay(): void {
-    // Show typing progress by removing typed characters while keeping bubble size
-    this.messageBubble.setMessageWithProgress(this.targetText, this.typedProgress);
+    // Get typed portion of the text
+    const typedText = this.targetText.slice(0, this.typedProgress);
+
+    // Use the new method with typing progress and error highlighting
+    this.messageBubble.setMessageWithTypingProgress(
+      this.targetText,
+      typedText,
+      this.hasWrongCharacter,
+    );
   }
 
   /**

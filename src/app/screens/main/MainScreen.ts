@@ -278,9 +278,8 @@ export class MainScreen extends Container {
       const playerMessage = this.wordSpawner.spawnPlayerMessage(completedWord);
       console.log("Level 3 - sent word:", completedWord);
 
-      // Damage boss when word reaches right edge
-      // For now, damage immediately (can be improved later with actual collision)
-      this.boss.takeDamage(completedWord.length);
+      // Word will damage boss when it reaches the right edge
+      // Damage is handled in word collision detection
 
       // Check if entire text is completed
       if (this.typingTextDisplay.isCompleted()) {
@@ -484,6 +483,8 @@ export class MainScreen extends Container {
     // Update boss if visible
     if (this.boss.visible) {
       this.boss.update(time.deltaMS / 1000);
+      // Check collisions between player messages and boss
+      this.checkPlayerMessageCollisions();
     }
 
     // Update UI displays
@@ -626,6 +627,30 @@ export class MainScreen extends Container {
       // Hide typing text display and boss for levels 1-2
       this.typingTextDisplay.visible = false;
       this.boss.visible = false;
+    }
+  }
+
+  /** Check collisions between player messages and boss */
+  private checkPlayerMessageCollisions(): void {
+    const activeWords = this.wordSpawner.getActiveWords();
+
+    for (const word of activeWords) {
+      // Check if this is a player message (moving right) that reached the boss
+      if (
+        word.isPlayerWord() &&
+        word.x >= this.boss.x - 50 &&
+        !word.isCompleted
+      ) {
+        // Word hit the boss - deal damage
+        this.boss.takeDamage(word.targetText.length);
+
+        // Mark word as completed to prevent multiple hits
+        word.isCompleted = true;
+
+        console.log(
+          `Player word "${word.targetText}" hit boss for ${word.targetText.length * 2} damage`,
+        );
+      }
     }
   }
 

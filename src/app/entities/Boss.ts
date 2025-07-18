@@ -102,7 +102,7 @@ export class Boss extends Container {
   public takeDamage(wordLength: number): void {
     if (this.isDefeated) return;
 
-    const damage = wordLength * 2; // 2 damage per character
+    const damage = wordLength + 1; // 2 damage per character
     this.currentHealth = Math.max(0, this.currentHealth - damage);
 
     console.log(

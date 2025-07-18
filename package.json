@@ -10,6 +10,7 @@
     "build:lint": "npm run lint && tsc && vite build",
     "lint": "eslint .",
     "dev": "vite",
+
     "deploy": "npm run build && gh-pages -d dist",
     "deploy:quick": "vite build && gh-pages -d dist",
     "predeploy": "npm run build"

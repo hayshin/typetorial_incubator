@@ -1,56 +1,67 @@
 # Typetorial Incubator
 
-Для вашей игры **НЕ нужен** сложный игровой движок! Вот оптимальный стек:
+🎮 **Hackathon Project for nfactorial Incubator**
 
-### Основные библиотеки:
-1. **Pixi.js** - для рендеринга канваса
-2. **GSAP** или **Framer Motion** - для анимаций слов, пуль, эффектов
-3. **Howler.js** - для звуковых эффектов (печать, попадание, ошибка)
+Typing game where players shoot letters at flying words to destroy them before they reach the left side of the screen.
 
-## 🏗️ Архитектура проекта
+## 📸 Screenshot
+
+![Game Screenshot](docs/screen.png)
+
+## 🎯 Game Concept
+
+**Genre:** Educational Typing Game
+**Platform:** Web (TypeScript + Canvas)
+**Target:** Improve typing speed and accuracy through engaging gameplay
+
+### Core Mechanics:
+- Words fly from right to left across the screen
+- Player types letters to shoot bullets that destroy matching letters in words
+- Complete words disappear and award points
+- Unfinished words that reach the left side cause damage
+- Game over when all lives are lost
+
+## 🏗️ Project Architecture
 
 ```
 src/
 ├── game/
 │   ├── core/
-│   │   ├── GameEngine.ts      # Основной движок игры
-│   │   ├── InputManager.ts    # Обработка ввода текста
-│   │   └── ScoreManager.ts    # Очки и жизни
+│   │   ├── GameEngine.ts      # Main game engine
+│   │   ├── InputManager.ts    # Keyboard input handling
+│   │   └── ScoreManager.ts    # Score and lives management
 │   ├── entities/
-│   │   ├── Player.ts          # Игрок (аватар слева)
-│   │   ├── Mentor.ts         # Монстр (справа)
-│   │   ├── Word.ts           # Летящее слово
-│   │   └── Bullet.ts         # Пуля от буквы
+│   │   ├── Player.ts          # Player character (left side)
+│   │   ├── Monster.ts         # Monster spawner (right side)
+│   │   ├── Word.ts           # Flying word entity
+│   │   └── Bullet.ts         # Letter bullet projectile
 │   ├── systems/
-│   │   ├── WordSpawner.ts    # Генерация слов
-│   │   ├── CollisionSystem.ts # Проверка коллизий
-│   │   └── AnimationSystem.ts # Анимации
+│   │   ├── WordSpawner.ts    # Word generation system
+│   │   ├── CollisionSystem.ts # Collision detection
+│   │   └── AnimationSystem.ts # Animation controller
 │   ├── scenes/
-│   │   ├── GameScene.ts      # Основная игра
-│   │   └── MenuScene.ts      # Меню
+│   │   ├── GameScene.ts      # Main gameplay scene
+│   │   └── MenuScene.ts      # Menu and UI screens
 │   └── data/
-│       └── wordDictionary.ts # База слов
+│       └── wordDictionary.ts # Word database
 ├── ui/
-│   ├── components/           # UI компоненты
-│   └── styles/              # CSS стили
+│   ├── components/           # UI components
+│   └── styles/              # CSS styles
 └── main.ts
 ```
 
-## 👥 Разделение работы (оптимальное для 24ч)
+## 🚀 Tech Stack
 
-### **Разработчик 1 (вы):**
-- **Игровая логика** (`GameEngine`, `InputManager`, `ScoreManager`)
-- **Система слов** (`Word`, `WordSpawner`, обработка ввода)
-- **Основной игровой цикл** и состояния
+**Core Technologies:**
+- **TypeScript** - Type-safe JavaScript
+- **Canvas API** - 2D rendering
+- **Vite** - Fast development build tool
 
-### **Разработчик 2:**
-- **Визуальная часть** (`Player`, `Monster`, анимации)
-- **UI/UX** (меню, HUD, жизни, счет)
-- **Полировка** (звуки, эффекты, стили)
+**Optional Libraries:**
+- **GSAP** or **Framer Motion** - Smooth animations
+- **Howler.js** - Audio effects (typing, hits, errors)
 
-## 🚀 Технический стек для быстрой разработки
-
-```/dev/null/package-suggestions.json#L1-15
+```json
 {
   "dependencies": {
     "gsap": "^3.12.2",
@@ -64,61 +75,103 @@ src/
 }
 ```
 
-## ⏱️ План разработки (24 часа)
+## 🏆 Hackathon Timeline (24 hours)
 
-### Часы 1-3: Настройка и MVP
-- Базовая структура проекта
-- Канвас с игроком и монстром
-- Простой ввод текста
+### Phase 1: Foundation (Hours 1-6)
+- [x] Project setup and structure
+- [x] Basic canvas rendering
+- [x] Player character and monster sprites
+- [x] Keyboard input system
 
-### Часы 4-8: Основная механика
-- Генерация и движение слов
-- Система стрельбы буквами
-- Проверка коллизий
+### Phase 2: Core Gameplay (Hours 7-16)
+- [ ] Word spawning and movement
+- [ ] Letter shooting mechanics
+- [ ] Collision detection system
+- [ ] Score and lives management
 
-### Часы 9-16: Полировка
-- Анимации и эффекты
-- Звуки
-- UI и меню
+### Phase 3: Polish & Features (Hours 17-22)
+- [ ] Animations and visual effects
+- [ ] Sound effects and feedback
+- [ ] UI/UX improvements
+- [ ] Difficulty progression
 
-### Часы 17-24: Тестирование и багфиксы
+### Phase 4: Testing & Deployment (Hours 23-24)
+- [ ] Bug fixes and optimization
+- [ ] Final testing
+- [ ] Deployment to GitHub Pages
 
-## 🎯 Ключевые компоненты для реализации
+## 🎮 Game Features
 
-1. **Система ввода** - отслеживание нажатий клавиш
-2. **Система слов** - движение слов от монстра к игроку
-3. **Визуальная обратная связь** - подсветка букв, анимации пуль
-4. **Система жизней** - урон при достижении слов левого края
+### MVP (Minimum Viable Product):
+- ✅ Basic word shooting mechanics
+- ✅ Score system
+- ✅ Lives/health system
+- ✅ Game over state
 
-## 🚀 Деплой на GitHub Pages
+### Stretch Goals:
+- 🎯 Different word categories
+- 🎨 Particle effects and animations
+- 🔊 Audio feedback
+- 📊 Statistics and leaderboard
+- 🎪 Multiple difficulty levels
 
-Проект настроен для автоматического деплоя на GitHub Pages.
+## 🏃‍♂️ Quick Start
 
-### Быстрый старт:
-
-1. **Включите GitHub Pages в настройках репозитория:**
-   - Перейдите в Settings → Pages
-   - В разделе "Source" выберите "GitHub Actions"
-
-2. **Обновите имя пользователя в package.json:**
-   ```json
-   "homepage": "https://yourusername.github.io/typetorial_incubator"
-   ```
-
-3. **Запушьте код в main ветку:**
-   ```bash
-   git add .
-   git commit -m "Setup deployment"
-   git push origin main
-   ```
-
-4. **Проект автоматически соберется и задеплоится!**
-
-### Ручной деплой:
 ```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Deploy to GitHub Pages
 npm run deploy
 ```
 
-Подробные инструкции по деплою смотрите в [DEPLOY.md](./DEPLOY.md)
+## 🚀 Deployment
+
+The project is configured for automatic deployment to GitHub Pages.
 
 **Live Demo:** https://yourusername.github.io/typetorial_incubator
+
+### Setup GitHub Pages:
+1. Go to Repository Settings → Pages
+2. Select "GitHub Actions" as source
+3. Update username in `package.json`
+4. Push to main branch
+
+## 👥 Team Structure
+
+**Optimal division for hackathon:**
+
+### Developer 1 (Backend Logic):
+- Game engine and core systems
+- Word management and collision detection
+- Input handling and game states
+
+### Developer 2 (Frontend/UI):
+- Visual components and animations
+- UI/UX design and styling
+- Audio integration and effects
+
+## 🎯 Key Implementation Points
+
+1. **Efficient Rendering** - Canvas-based 2D graphics
+2. **Responsive Input** - Real-time keyboard handling
+3. **Smooth Animations** - 60fps gameplay experience
+4. **Scalable Architecture** - Easy to extend and modify
+
+## 🏅 nfactorial Incubator
+
+This project is developed as part of the nfactorial Incubator hackathon, focusing on:
+- Rapid prototyping skills
+- Team collaboration
+- Technical implementation
+- User experience design
+
+---
+
+**Built with ❤️ during nfactorial Incubator Hackathon**

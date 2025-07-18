@@ -6,6 +6,7 @@ import { Container } from "pixi.js";
 import { GameState } from "../../core/GameState";
 import { InputManager } from "../../core/InputManager";
 import { Level3TextManager } from "../../data/Level3TextManager";
+import { Boss } from "../../entities/Boss";
 import { Player } from "../../entities/Player";
 import type { Word } from "../../entities/Word";
 import { engine } from "../../getEngine";
@@ -16,6 +17,7 @@ import { Label } from "../../ui/Label";
 import { TypingTextDisplay } from "../../ui/TypingTextDisplay";
 import { GameOverScreen } from "../gameover/GameOverScreen";
 import { LevelIntroScreen } from "../levels/LevelIntroScreen";
+import { VictoryScreen } from "../victory/VictoryScreen";
 
 /** The screen that holds the app */
 export class MainScreen extends Container {
@@ -42,6 +44,7 @@ export class MainScreen extends Container {
 
   // Level 3 components
   private typingTextDisplay!: TypingTextDisplay;
+  private boss!: Boss;
   private currentBossText: string = "";
 
   // Game state
@@ -104,6 +107,12 @@ export class MainScreen extends Container {
     // Initialize player
     this.player = new Player();
     this.mainContainer.addChild(this.player);
+
+    // Initialize boss (hidden by default)
+    this.boss = new Boss();
+    this.boss.visible = false;
+    this.boss.onDefeated = this.handleBossDefeated.bind(this);
+    this.mainContainer.addChild(this.boss);
 
     console.log(`Player initialized at: (${this.player.x}, ${this.player.y})`);
     console.log(`MainContainer will be positioned at center during resize`);
@@ -269,6 +278,10 @@ export class MainScreen extends Container {
       const playerMessage = this.wordSpawner.spawnPlayerMessage(completedWord);
       console.log("Level 3 - sent word:", completedWord);
 
+      // Damage boss when word reaches right edge
+      // For now, damage immediately (can be improved later with actual collision)
+      this.boss.takeDamage(completedWord.length);
+
       // Check if entire text is completed
       if (this.typingTextDisplay.isCompleted()) {
         this.handleLevel3TextCompleted();
@@ -279,7 +292,22 @@ export class MainScreen extends Container {
   /** Handle level 3 text completion */
   private handleLevel3TextCompleted(): void {
     console.log("Level 3 - boss text completed!");
-    // TODO: Handle boss defeat and level completion
+    // Boss should be defeated by now, victory handled in handleBossDefeated
+  }
+
+  /** Handle boss defeated */
+  private async handleBossDefeated(): Promise<void> {
+    console.log("Boss defeated - showing victory screen!");
+
+    // Stop all game systems
+    this.wordSpawner.stopSpawning();
+    this.inputManager.setEnabled(false);
+
+    // Set final score
+    GameState.setFinalScore(this.score);
+
+    // Show victory screen
+    await engine().navigation.showScreen(VictoryScreen);
   }
 
   /** Update input display for level 3 */
@@ -453,6 +481,11 @@ export class MainScreen extends Container {
     // Update player and bullets
     this.player.update(time.deltaMS / 1000);
 
+    // Update boss if visible
+    if (this.boss.visible) {
+      this.boss.update(time.deltaMS / 1000);
+    }
+
     // Update UI displays
     this.updateLevelDisplay();
     this.updateProgressDisplay();
@@ -484,6 +517,8 @@ export class MainScreen extends Container {
 
     // Reset level 3 components
     this.typingTextDisplay.reset();
+    this.boss.reset();
+    this.boss.visible = false;
     this.currentBossText = "";
 
     this.updateScoreDisplay();
@@ -565,18 +600,32 @@ export class MainScreen extends Container {
       // Show typing text display for level 3
       this.typingTextDisplay.visible = true;
 
+      // Show and setup boss
+      this.boss.visible = true;
+
       // Get random boss text and set it
       const bossText = Level3TextManager.getRandomText();
       this.currentBossText = bossText.text;
       this.typingTextDisplay.setText(this.currentBossText);
 
+      // Set boss health based on text length
+      const bossHealth = Level3TextManager.calculateBossHealth(
+        this.currentBossText,
+      );
+      this.boss.setHealth(bossHealth);
+
       console.log("Level 3 - boss text set:", this.currentBossText);
+      console.log("Level 3 - boss health set:", bossHealth);
+
+      // Show boss with animation
+      this.boss.show();
 
       // Update input display for level 3
       this.updateLevel3InputDisplay();
     } else {
-      // Hide typing text display for levels 1-2
+      // Hide typing text display and boss for levels 1-2
       this.typingTextDisplay.visible = false;
+      this.boss.visible = false;
     }
   }
 

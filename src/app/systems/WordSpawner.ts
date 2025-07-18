@@ -41,6 +41,12 @@ export class WordSpawner {
   /** Callback when level should advance */
   public onLevelAdvance?: (nextLevel: 1 | 2 | 3) => void;
 
+  /** Callback to get mentor spawn position for Level 2 */
+  public getMentorSpawnPosition?: () => { x: number; y: number };
+
+  /** Callback to notify when mentor should start/stop speaking */
+  public onMentorSpeaking?: (speaking: boolean) => void;
+
   /** Messages remaining in current level */
   private remainingMessages: MessageEntry[] = [];
 
@@ -119,8 +125,8 @@ export class WordSpawner {
     this.updateLevelProgress();
 
     const speed = this.getSpeedForDifficulty();
-
     const word = new Word(messageEntry.text, speed, messageEntry.author);
+
 
     // const word = new Word(messageEntry.text, speed);
 
@@ -128,6 +134,11 @@ export class WordSpawner {
     const spawnPosition = this.getSpawnPosition(messageEntry);
     word.x = spawnPosition.x;
     word.y = spawnPosition.y;
+
+    // Notify mentor to start speaking if this is an assel word
+    if (messageEntry.author === "асель" && this.onMentorSpeaking) {
+      this.onMentorSpeaking(true);
+    }
 
     console.log("WordSpawner - word positioned at:", word.x, word.y);
     this.activeWords.push(word);
@@ -143,11 +154,15 @@ export class WordSpawner {
   } {
     const currentLevel = GameState.getCurrentLevel();
 
-    // Level 2: Messages from "асель" spawn from speaker position
+    // Level 2: Messages from "асель" spawn from mentor position
     if (currentLevel === 2 && messageEntry.author === "асель") {
+      if (this.getMentorSpawnPosition) {
+        return this.getMentorSpawnPosition();
+      }
+      // Fallback to default speaker position
       return {
-        x: GameConstants.SPEAKER_X,
-        y: GameConstants.SPEAKER_Y,
+        x: GameConstants.WORD_SPAWN_X,
+        y: this.getRandomSpawnY(),
       };
     }
 
@@ -237,6 +252,14 @@ export class WordSpawner {
       }
       return true;
     });
+
+    // Check if there are any active assel words left
+    const anyActiveAssel = this.activeWords.some(
+      (w) => w["messageBubble"] && w["messageBubble"]["senderName"] && w["messageBubble"]["senderName"].text.toLowerCase() === "асель"
+    );
+    if (!anyActiveAssel && this.onMentorSpeaking) {
+      this.onMentorSpeaking(false);
+    }
 
     // Check if level should advance after cleaning up words
     if (this.remainingMessages.length === 0 && this.activeWords.length === 0) {
@@ -452,6 +475,8 @@ export class WordSpawner {
       currentLevel,
     );
 
+    // TESTING: Comment out level advancement logic to stay on level 2
+    /*
     if (currentLevel < 3) {
       const nextLevel = (currentLevel + 1) as 1 | 2 | 3;
       console.log("WordSpawner - transitioning to nextLevel:", nextLevel);
@@ -464,6 +489,10 @@ export class WordSpawner {
         this.onLevelAdvance(nextLevel);
       }
     }
+    */
+    
+    // TESTING: Just log that level would have advanced
+    console.log("TESTING: Level completion detected but advancement disabled");
   }
 
   /**

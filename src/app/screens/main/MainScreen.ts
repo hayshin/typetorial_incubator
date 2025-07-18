@@ -23,7 +23,9 @@ import { TabBar } from "../../ui/TabBar";
 import { TypingTextDisplay } from "../../ui/TypingTextDisplay";
 import { GameOverScreen } from "../gameover/GameOverScreen";
 import { LevelIntroScreen } from "../levels/LevelIntroScreen";
+import { Mentor } from "../../entities/Mentor";
 import { VictoryScreen } from "../victory/VictoryScreen";
+
 
 /** The screen that holds the app */
 export class MainScreen extends Container {
@@ -39,13 +41,9 @@ export class MainScreen extends Container {
   private wordSpawner!: WordSpawner;
   private gameContainer!: Container;
   private player!: Player;
+  private mentor!: Mentor; // Level 2 mentor entity
 
   // UI elements
-  private currentInputDisplay!: Label;
-  private scoreDisplay!: Label;
-  private livesDisplay!: Label;
-  private levelDisplay!: Label;
-  private progressDisplay!: Label;
   private progressBar!: ProgressBar;
 
   // Level 3 components
@@ -119,6 +117,19 @@ export class MainScreen extends Container {
     this.wordSpawner.onWordReachedEdge = this.handleWordReachedEdge.bind(this);
     this.wordSpawner.onWordCompleted = this.handleWordCompleted.bind(this);
     this.wordSpawner.onLevelAdvance = this.handleLevelAdvance.bind(this);
+
+    // Initialize mentor for Level 2 (after word spawner)
+    this.initializeMentor();
+    
+    // Connect mentor spawn position for Level 2 (after mentor is created)
+    if (GameState.getCurrentLevel() === 2 && this.mentor) {
+      this.wordSpawner.getMentorSpawnPosition = () => {
+        return this.mentor.getWordSpawnPosition();
+      };
+      this.wordSpawner.onMentorSpeaking = (speaking: boolean) => {
+        this.setMentorSpeaking(speaking);
+      };
+    }
   }
 
   /** Ensure player is properly positioned on the left side */
@@ -129,67 +140,25 @@ export class MainScreen extends Container {
     this.player.y = 400; // Center vertically relative to screen
   }
 
+  /** Initialize mentor for Level 2 */
+  private initializeMentor(): void {
+    // Only show mentor in Level 2
+    if (GameState.getCurrentLevel() === 2) {
+      console.log("MainScreen - Initializing mentor for Level 2");
+      this.mentor = new Mentor();
+      this.mainContainer.addChild(this.mentor);
+      console.log("MainScreen - Mentor added to screen at:", this.mentor.x, this.mentor.y);
+    } else {
+      console.log("MainScreen - Not Level 2, skipping mentor initialization. Current level:", GameState.getCurrentLevel());
+    }
+  }
+
   /** Initialize UI elements */
   private initUI(): void {
     // Create tab bar
     this.tabBar = new TabBar();
     this.tabBar.y = 20; // Position at top of screen
     this.addChild(this.tabBar);
-
-    // Score display
-    this.scoreDisplay = new Label({
-      text: `Score: ${this.score}`,
-      style: {
-        fontSize: 20,
-        fill: 0xffffff,
-      },
-    });
-    this.scoreDisplay.y = 80;
-    this.addChild(this.scoreDisplay);
-
-    // Lives display
-    this.livesDisplay = new Label({
-      text: `Lives: ${this.lives}`,
-      style: {
-        fontSize: 20,
-        fill: 0xff0000,
-      },
-    });
-    this.livesDisplay.y = 110;
-    this.addChild(this.livesDisplay);
-
-    // Level display
-    this.levelDisplay = new Label({
-      text: `Level: ${GameState.getCurrentLevel()}`,
-      style: {
-        fontSize: 20,
-        fill: 0x4488ff,
-      },
-    });
-    this.levelDisplay.y = 140;
-    this.addChild(this.levelDisplay);
-
-    // Progress display
-    this.progressDisplay = new Label({
-      text: `Progress: 0%`,
-      style: {
-        fontSize: 18,
-        fill: 0xcccccc,
-      },
-    });
-    this.progressDisplay.y = 170;
-    this.addChild(this.progressDisplay);
-
-    // Current input display
-    this.currentInputDisplay = new Label({
-      text: "",
-      style: {
-        fontSize: 18,
-        fill: 0x00ff00,
-      },
-    });
-    this.currentInputDisplay.y = 200;
-    this.addChild(this.currentInputDisplay);
 
     // Progress bar
     this.progressBar = new ProgressBar();
@@ -276,7 +245,6 @@ export class MainScreen extends Container {
       } else {
         console.log("Level 3 - wrong character:", char);
       }
-      this.updateLevel3InputDisplay();
     }
   }
 
@@ -319,17 +287,7 @@ export class MainScreen extends Container {
     await engine().navigation.showScreen(VictoryScreen);
   }
 
-  /** Update input display for level 3 */
-  private updateLevel3InputDisplay(): void {
-    const nextChar = this.typingTextDisplay.getNextExpectedCharacter();
-    const currentWord = this.typingTextDisplay.getCurrentWord();
-    const progress = this.typingTextDisplay.getProgress();
 
-    let displayText = `Typing: ${currentWord} | Progress: ${Math.round(progress * 100)}%`;
-
-    this.currentInputDisplay.text = displayText;
-    this.currentInputDisplay.style.fill = 0x00ff00;
-  }
 
   /** Handle backspace */
   private handleBackspace(): void {
@@ -338,7 +296,6 @@ export class MainScreen extends Container {
     if (currentLevel === 3) {
       // Level 3: Backspace in text display
       this.typingTextDisplay.backspace();
-      this.updateLevel3InputDisplay();
     } else {
       // Levels 1-2: Original logic
       if (this.currentInput.length > 0) {
@@ -501,11 +458,8 @@ export class MainScreen extends Container {
     this.tabBar.updateLevel(GameState.getCurrentLevel());
   }
 
-  /** Update progress display */
-  private updateProgressDisplay(): void {
-    const progress = GameState.getLevelProgress();
-    this.progressDisplay.text = `Progress: ${Math.round(progress)}%`;
-
+  /** Update progress bar */
+  private updateProgressBar(): void {
     // Update progress bar based on current level
     const currentLevel = GameState.getCurrentLevel();
 
@@ -536,7 +490,6 @@ export class MainScreen extends Container {
         this.totalMessagesInLevel,
       );
     }
-    // this.tabBar.updateProgress(progress);
   }
 
   /** Game over */
@@ -573,7 +526,7 @@ export class MainScreen extends Container {
 
     // Update UI displays
     this.updateLevelDisplay();
-    this.updateProgressDisplay();
+    this.updateProgressBar();
   }
 
   /** Pause gameplay - automatically fired when a popup is presented */
@@ -616,7 +569,7 @@ export class MainScreen extends Container {
     this.updateScoreDisplay();
     this.updateLivesDisplay();
     this.updateLevelDisplay();
-    this.updateProgressDisplay();
+    this.updateProgressBar();
     this.inputManager.setEnabled(true);
 
     // Don't reset GameState during level transitions
@@ -644,12 +597,7 @@ export class MainScreen extends Container {
     this.tabBar.resize(width - 60); // Leave margin for pause/settings buttons
     this.tabBar.x = 30; // Align with pause button
 
-    // Position UI elements
-    this.currentInputDisplay.x = 50;
-    this.scoreDisplay.x = 50;
-    this.livesDisplay.x = 50;
-    this.levelDisplay.x = 50;
-    this.progressDisplay.x = 50;
+
 
     // Resize level 3 components
     this.typingTextDisplay.resize(width, height);
@@ -659,30 +607,16 @@ export class MainScreen extends Container {
     // Position input display at bottom
     this.inputDisplay.x = centerX - 200; // Center the input box
     this.inputDisplay.y = centerY + height / 2 - 80; // 80px from bottom
+
+    // Resize mentor for Level 2
+    if (this.mentor) {
+      this.mentor.resize();
+    }
   }
 
   /** Show screen with animations */
   public async show(): Promise<void> {
     engine().audio.bgm.play("main/sounds/bgm-main.mp3", { volume: 0.5 });
-
-    const elementsToAnimate = [
-      this.pauseButton,
-      this.settingsButton,
-      // this.addButton,
-      // this.removeButton,
-    ];
-
-    let finalPromise!: AnimationPlaybackControls;
-    for (const element of elementsToAnimate) {
-      element.alpha = 0;
-      finalPromise = animate(
-        element,
-        { alpha: 1 },
-        { duration: 0.3, delay: 0.75, ease: "backOut" },
-      );
-    }
-
-    await finalPromise;
 
     // Show progress bar with animation
     this.progressBar.show();
@@ -723,8 +657,7 @@ export class MainScreen extends Container {
       // Show boss with animation
       this.boss.show();
 
-      // Update input display for level 3
-      this.updateLevel3InputDisplay();
+
     } else {
       // Reset progress tracking for levels 1-2
       this.completedMessages = 0;
@@ -766,6 +699,16 @@ export class MainScreen extends Container {
   public blur() {
     if (!engine().navigation.currentPopup) {
       engine().navigation.presentPopup(PausePopup);
+    }
+  }
+
+  private setMentorSpeaking(speaking: boolean) {
+    if (this.mentor) {
+      if (speaking) {
+        this.mentor.startSpeaking();
+      } else {
+        this.mentor.stopSpeaking();
+      }
     }
   }
 }

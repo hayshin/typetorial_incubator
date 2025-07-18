@@ -1,5 +1,6 @@
 import { Container } from "pixi.js";
 import { GameConstants } from "../data/GameConstants";
+import { GameState } from "../core/GameState";
 import { MessageBubble } from "../ui/MessageBubble";
 
 /**
@@ -58,6 +59,8 @@ export class Word extends Container {
         maxWidth: GameConstants.MESSAGE_MAX_WIDTH,
         messageSize: 20,
         senderNameSize: 20,
+        level: GameState.getCurrentLevel(), // Pass current level
+        author: author || "Mentor", // Pass author for styling
       },
     );
 

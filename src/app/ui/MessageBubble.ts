@@ -29,6 +29,9 @@ const MENTOR_PROFILES: Record<string, string> = {
   бахр: "main/mentors/4.JPG",
   баха: "main/mentors/5.JPG",
   игрок: "nfac_logo.svg",
+  арман: "main/mentors/arman/0.png", 
+
+
 };
 
 /**
